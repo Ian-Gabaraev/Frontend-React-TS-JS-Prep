@@ -1,0 +1,39 @@
+# GitHub Pages Configuration
+# Documentation: https://docs.github.com/en/pages
+
+# Site settings
+title: Frontend Interview Prep
+description: A comprehensive guide to JavaScript and TypeScript concepts commonly asked in frontend interviews.
+author: Ian
+
+# Theme settings (GitHub Pages supported themes)
+# Options: architect, cayman, dinky, hacker, leap-day, merlot, midnight, minimal, modernist, slate, tactile, time-machine
+remote_theme: pages-themes/cayman@v0.2.0
+plugins:
+  - jekyll-remote-theme
+
+# Build settings
+markdown: kramdown
+highlighter: rouge
+
+# Kramdown settings (for better code highlighting)
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+  syntax_highlighter_opts:
+    css_class: highlight
+    block:
+      line_numbers: false
+
+# Exclude files from build
+exclude:
+  - node_modules
+  - package.json
+  - package-lock.json
+  - test.js
+  - test.ts
+  - "*.log"
+
+# Include README as the main page
+include:
+  - README.md
