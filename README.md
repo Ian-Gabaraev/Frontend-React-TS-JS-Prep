@@ -8,6 +8,8 @@
 
 - [Quick Reference](#quick-reference)
 - [JavaScript Gotchas](#javascript-gotchas)
+  - [typeof null](#typeof-null)
+  - [Empty Array Addition](#empty-array-addition)
   - [Event Loop](#event-loop)
   - [this in Arrow Functions](#this-in-arrow-functions)
   - [Timeout with var](#timeout-with-var)
@@ -28,6 +30,11 @@
   - [Interfaces](#interfaces)
   - [Composing Types](#composing-types)
   - [Type vs Interface](#type-vs-interface)
+- [TypeScript Utility Types](#typescript-utility-types)
+  - [Omit](#omittype-keys)
+  - [Record](#recordk-v)
+  - [Pick](#pickt-k)
+  - [Partial](#partialt)
 
 ---
 
@@ -41,6 +48,34 @@
 ---
 
 ## JavaScript Gotchas
+
+### typeof null
+
+**Question:** What does this return?
+
+```ts
+console.log(typeof null)
+```
+
+**Answer:** `"object"`
+
+**Why?** This is a historical bug in JavaScript that was never fixed for backward compatibility. `null` is a primitive, but `typeof null` returns `"object"`.
+
+---
+
+### Empty Array Addition
+
+**Question:** What does this return?
+
+```ts
+console.log([] + [])
+```
+
+**Answer:** `""`
+
+**Why?** The `+` operator tries to convert arrays to primitives. Arrays convert to strings via `.toString()`, which returns `""` for empty arrays. So `"" + ""` equals `""`.
+
+---
 
 ### Event Loop
 
@@ -437,6 +472,83 @@ function identity<T>(value: T): T {
   return value
 }
 ```
+
+---
+
+## TypeScript Utility Types
+
+### Omit<Type, Keys>
+
+Creates a new type by **excluding** specific properties.
+
+```ts
+type User = {
+  id: number
+  name: string
+  email: string
+}
+
+type PublicUser = Omit<User, "email">
+// Result: { id: number; name: string }
+```
+
+---
+
+### Record<K, V>
+
+Creates a dictionary/map type with keys of type `K` and values of type `V`.
+
+```ts
+type Scores = Record<string, number>
+
+const scores: Scores = {
+  alice: 10,
+  bob: 15
+}
+```
+
+Equivalent to:
+
+```ts
+type Scores = {
+  [key: string]: number
+}
+```
+
+---
+
+### Pick<T, K>
+
+Creates a new type by **selecting** specific properties.
+
+```ts
+type User = {
+  id: number
+  name: string
+  email: string
+}
+
+type UserPreview = Pick<User, "id" | "name">
+// Result: { id: number; name: string }
+```
+
+---
+
+### Partial<T>
+
+Makes **all properties optional**.
+
+```ts
+type User = {
+  id: number
+  name: string
+}
+
+type PartialUser = Partial<User>
+// Result: { id?: number; name?: string }
+```
+
+**Use case:** Useful for update functions where you only want to modify some fields.
 
 ---
 
