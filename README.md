@@ -9,6 +9,7 @@
 - [Quick Reference](#quick-reference)
 - [JavaScript Gotchas](#javascript-gotchas)
   - [typeof null](#typeof-null)
+  - [typeof Array](#typeof-array)
   - [Empty Array Addition](#empty-array-addition)
   - [Event Loop](#event-loop)
   - [this in Arrow Functions](#this-in-arrow-functions)
@@ -16,6 +17,9 @@
   - [Closures](#closures)
   - [Object Reference Assignment](#object-reference-assignment)
 - [Core JavaScript Concepts](#core-javascript-concepts)
+  - [OOP in JavaScript](#oop-in-javascript)
+  - [Data Types](#data-types)
+  - [Promises](#promises)
   - [Arrow Functions](#arrow-functions)
   - [Single-Threaded Nature](#is-js-single-threaded)
   - [Microtasks vs Macrotasks](#microtasks-and-macrotasks)
@@ -60,6 +64,20 @@ console.log(typeof null)
 **Answer:** `"object"`
 
 **Why?** This is a historical bug in JavaScript that was never fixed for backward compatibility. `null` is a primitive, but `typeof null` returns `"object"`.
+
+---
+
+### typeof Array
+
+**Question:** What does this return?
+
+```ts
+console.log(typeof [])
+```
+
+**Answer:** `"object"` (not `"array"`!)
+
+**Why?** Arrays are objects in JavaScript. Use `Array.isArray([])` to check for arrays.
 
 ---
 
@@ -194,6 +212,162 @@ console.log(a.value) // 5
 ---
 
 ## Core JavaScript Concepts
+
+### OOP in JavaScript
+
+#### Basic Class Syntax
+
+```ts
+class User {
+  constructor(name) {
+    this.name = name
+  }
+
+  greet() {
+    return "Hello " + this.name
+  }
+}
+
+const u = new User("Ian")
+```
+
+#### Inheritance
+
+```ts
+class Animal {
+  speak() {
+    console.log("sound")
+  }
+}
+
+class Dog extends Animal {
+  speak() {
+    console.log("bark")
+  }
+}
+```
+
+#### super Keyword
+
+Calls the parent class constructor or methods:
+
+```ts
+class Animal {
+  constructor(name) {
+    this.name = name
+  }
+}
+
+class Dog extends Animal {
+  constructor(name) {
+    super(name) // Call parent constructor
+  }
+}
+```
+
+#### Encapsulation (Private Fields)
+
+Use `#` prefix for private fields:
+
+```ts
+class Counter {
+  #count = 0
+
+  inc() {
+    this.#count++
+  }
+
+  get value() {
+    return this.#count
+  }
+}
+```
+
+---
+
+### Data Types
+
+#### Primitives
+
+| Type | Example |
+|------|------|
+| `string` | `"hello"` |
+| `number` | `42` |
+| `boolean` | `true` |
+| `undefined` | `undefined` |
+| `null` | `null` |
+| `symbol` | `Symbol("id")` |
+| `bigint` | `123n` |
+
+#### Reference Types (Objects)
+
+| Type | Example |
+|------|------|
+| `Object` | `{ name: "Ian" }` |
+| `Array` | `[1, 2, 3]` |
+| `Function` | `function() {}` |
+| `Date` | `new Date()` |
+| `Map` | `new Map()` |
+| `Set` | `new Set()` |
+| `Promise` | `new Promise(...)` |
+
+---
+
+### Promises
+
+A Promise represents the result of an asynchronous operation.
+
+#### States
+
+| State | Description |
+|-------|-------------|
+| `pending` | Initial state, operation in progress |
+| `fulfilled` | Operation completed successfully |
+| `rejected` | Operation failed |
+
+#### Creating a Promise
+
+```ts
+const promise = new Promise((resolve, reject) => {
+  setTimeout(() => {
+    resolve("done")
+  }, 1000)
+})
+```
+
+#### Consuming with `.then()`
+
+```ts
+promise.then(result => {
+  console.log(result)
+})
+```
+
+#### Modern async/await Syntax
+
+```ts
+async function run() {
+  const result = await promise
+  console.log(result)
+}
+```
+
+#### Real-World Example
+
+```ts
+const res = await fetch("/api/users")
+const data = await res.json()
+```
+
+#### Chaining
+
+```ts
+Promise.resolve(5)
+  .then(x => x * 2)
+  .then(console.log) // 10
+```
+
+---
 
 ### Arrow Functions
 
