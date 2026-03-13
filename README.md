@@ -39,6 +39,17 @@
   - [Record](#recordk-v)
   - [Pick](#pickt-k)
   - [Partial](#partialt)
+- [Node.js & Package Management](#nodejs--package-management)
+  - [What is Node.js?](#what-is-nodejs)
+  - [npm vs npx vs yarn vs pnpm](#npm-vs-npx-vs-yarn-vs-pnpm)
+  - [package.json](#packagejson)
+  - [Dependencies vs DevDependencies](#dependencies-vs-devdependencies)
+  - [Semantic Versioning](#semantic-versioning-semver)
+  - [package-lock.json](#package-lockjson)
+  - [node_modules](#node_modules)
+  - [Common npm Commands](#common-npm-commands)
+  - [ES Modules vs CommonJS](#es-modules-vs-commonjs)
+  - [Environment Variables](#environment-variables)
 
 ---
 
@@ -767,6 +778,276 @@ interface User {
 
 // Result: User has both name and age
 ```
+
+---
+
+## Node.js & Package Management
+
+### What is Node.js?
+
+Node.js is a **JavaScript runtime** built on Chrome's V8 engine. It allows you to run JavaScript **outside the browser** (on servers, CLI tools, etc.).
+
+| Feature | Browser JS | Node.js |
+|---------|-----------|---------||
+| DOM access | ✅ | ❌ |
+| `window` object | ✅ | ❌ |
+| `document` object | ✅ | ❌ |
+| File system access | ❌ | ✅ |
+| `process` object | ❌ | ✅ |
+| `require`/`import` modules | ✅ (ESM) | ✅ (both) |
+
+**Key Point:** Node.js is **single-threaded** but uses an **event loop** for async I/O (same concept as browser JS).
+
+---
+
+### npm vs npx vs yarn vs pnpm
+
+| Tool | Purpose |
+|------|---------||
+| `npm` | **Node Package Manager** — installs, manages, and publishes packages |
+| `npx` | **Executes** packages without installing globally (e.g., `npx create-react-app`) |
+| `yarn` | Alternative to npm (faster, deterministic installs, by Facebook) |
+| `pnpm` | Performant npm — uses symlinks, saves disk space |
+
+**Interview Tip:** Know that `npx` is useful for running one-off commands without polluting global installs.
+
+```bash
+# npm - install then run
+npm install -g create-react-app
+create-react-app my-app
+
+# npx - run directly without global install
+npx create-react-app my-app
+```
+
+---
+
+### package.json
+
+The **manifest file** for your project. Contains metadata, dependencies, and scripts.
+
+```json
+{
+  "name": "my-app",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "build": "tsc",
+    "test": "jest"
+  },
+  "dependencies": {
+    "express": "^4.18.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "jest": "^29.0.0"
+  }
+}
+```
+
+| Field | Description |
+|-------|-------------|
+| `name` | Package name (must be unique if publishing) |
+| `version` | Current version (semver) |
+| `main` | Entry point for CommonJS |
+| `module` | Entry point for ES Modules |
+| `type` | `"module"` for ESM, `"commonjs"` (default) for CJS |
+| `scripts` | Custom commands run via `npm run <name>` |
+| `dependencies` | Production packages |
+| `devDependencies` | Development-only packages |
+
+---
+
+### Dependencies vs DevDependencies
+
+| Type | Install Command | Purpose | Included in Production? |
+|------|-----------------|---------|------------------------|
+| `dependencies` | `npm install lodash` | Required at runtime | ✅ Yes |
+| `devDependencies` | `npm install -D jest` | Development/build tools | ❌ No |
+
+**Examples:**
+
+| dependencies | devDependencies |
+|--------------|------------------|
+| react, express, axios | typescript, jest, eslint |
+| lodash, moment | webpack, vite, prettier |
+
+**Interview Question:** "Why separate them?"
+- Smaller production bundles
+- Faster installs in CI/CD (`npm install --production`)
+- Clear distinction of what's needed at runtime
+
+---
+
+### Semantic Versioning (SemVer)
+
+Format: `MAJOR.MINOR.PATCH` (e.g., `4.18.2`)
+
+| Part | When to Increment | Example |
+|------|-------------------|----------|
+| **MAJOR** | Breaking changes | `4.0.0` → `5.0.0` |
+| **MINOR** | New features (backward compatible) | `4.18.0` → `4.19.0` |
+| **PATCH** | Bug fixes (backward compatible) | `4.18.2` → `4.18.3` |
+
+#### Version Ranges in package.json
+
+| Symbol | Meaning | Example | Matches |
+|--------|---------|---------|----------|
+| `^` (caret) | Compatible with version | `^4.18.0` | `4.18.0` to `<5.0.0` |
+| `~` (tilde) | Approximately equivalent | `~4.18.0` | `4.18.0` to `<4.19.0` |
+| `*` | Any version | `*` | Latest |
+| `>=`, `<` | Range | `>=4.0.0 <5.0.0` | Explicit range |
+| (none) | Exact version | `4.18.2` | Only `4.18.2` |
+
+**Interview Tip:** `^` is the default when you `npm install`. It allows minor and patch updates.
+
+---
+
+### package-lock.json
+
+**Purpose:** Locks the **exact versions** of all dependencies (including nested ones).
+
+| package.json | package-lock.json |
+|--------------|-------------------|
+| `"express": "^4.18.0"` | `"express": "4.18.2"` (exact) |
+| Version ranges | Exact resolved versions |
+| Human-editable | Auto-generated |
+| Commit? Yes | Commit? **Yes** |
+
+**Why commit it?**
+- Ensures everyone gets the **same versions**
+- Reproducible builds across machines/CI
+- Prevents "works on my machine" issues
+
+**Interview Question:** "What happens if you delete `package-lock.json`?"
+- npm will resolve versions again based on `package.json` ranges
+- You might get different (newer) versions
+- Could introduce bugs or breaking changes
+
+---
+
+### node_modules
+
+The folder where all installed packages live.
+
+**Key Points:**
+- **Never commit to git** (add to `.gitignore`)
+- Can be **huge** (hundreds of MB)
+- Recreated with `npm install`
+- Contains all dependencies AND their dependencies (nested)
+
+```bash
+# Typical .gitignore
+node_modules/
+.env
+dist/
+```
+
+**Interview Question:** "Why not commit node_modules?"
+- Too large
+- Platform-specific binaries
+- `package-lock.json` already guarantees reproducibility
+
+---
+
+### Common npm Commands
+
+| Command | Description |
+|---------|-------------|
+| `npm init` | Create `package.json` interactively |
+| `npm init -y` | Create `package.json` with defaults |
+| `npm install` | Install all dependencies from `package.json` |
+| `npm install <pkg>` | Install and add to `dependencies` |
+| `npm install -D <pkg>` | Install and add to `devDependencies` |
+| `npm install -g <pkg>` | Install globally |
+| `npm uninstall <pkg>` | Remove a package |
+| `npm update` | Update packages to latest allowed version |
+| `npm outdated` | Check for outdated packages |
+| `npm run <script>` | Run a script from `package.json` |
+| `npm start` | Run the `start` script (shortcut) |
+| `npm test` | Run the `test` script (shortcut) |
+| `npm ls` | List installed packages |
+| `npm cache clean --force` | Clear npm cache |
+
+---
+
+### ES Modules vs CommonJS
+
+| Feature | CommonJS (CJS) | ES Modules (ESM) |
+|---------|----------------|------------------|
+| Syntax | `require()` / `module.exports` | `import` / `export` |
+| Loading | Synchronous | Asynchronous |
+| File extension | `.js` (default) | `.mjs` or `.js` with `"type": "module"` |
+| Top-level await | ❌ | ✅ |
+| Browser support | ❌ | ✅ |
+| Tree-shaking | ❌ | ✅ |
+
+#### CommonJS (older, Node.js default)
+
+```js
+// Exporting
+module.exports = { add, subtract }
+module.exports.add = (a, b) => a + b
+
+// Importing
+const { add } = require('./math')
+const express = require('express')
+```
+
+#### ES Modules (modern, recommended)
+
+```js
+// Exporting
+export const add = (a, b) => a + b
+export default function subtract(a, b) { return a - b }
+
+// Importing
+import { add } from './math.js'
+import subtract from './math.js'
+import * as math from './math.js'
+```
+
+**Interview Tip:** Know the difference! ESM is the future, but many Node.js projects still use CommonJS.
+
+---
+
+### Environment Variables
+
+Used to store configuration, secrets, and environment-specific values.
+
+#### Accessing in Node.js
+
+```js
+const port = process.env.PORT || 3000
+const apiKey = process.env.API_KEY
+```
+
+#### .env Files
+
+Use `dotenv` package to load `.env` files:
+
+```bash
+# .env file
+PORT=3000
+API_KEY=secret123
+DATABASE_URL=postgres://localhost/db
+```
+
+```js
+import 'dotenv/config'
+// or
+require('dotenv').config()
+
+console.log(process.env.PORT) // "3000"
+```
+
+**Security Rules:**
+- **Never commit `.env`** to git (add to `.gitignore`)
+- Use `.env.example` to document required variables (without values)
+- Different `.env` files for different environments (`.env.local`, `.env.production`)
 
 ---
 
