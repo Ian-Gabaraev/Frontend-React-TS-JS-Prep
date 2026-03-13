@@ -8,10 +8,12 @@
 
 - [Quick Reference](#quick-reference)
 - [JavaScript Gotchas](#javascript-gotchas)
+  - [Arrow Function Block Body](#arrow-function-block-body)
   - [typeof null](#typeof-null)
   - [typeof Array](#typeof-array)
   - [Empty Array Addition](#empty-array-addition)
   - [Event Loop](#event-loop)
+  - [Spread and Shallow Copy](#spread-and-shallow-copy)
   - [this in Arrow Functions](#this-in-arrow-functions)
   - [Timeout with var](#timeout-with-var)
   - [Closures](#closures)
@@ -100,6 +102,41 @@
 
 ## JavaScript Gotchas
 
+### Arrow Function Block Body
+
+**Question:** What does this output?
+
+```ts
+const nums = [1, 2, 3]
+
+const result = nums.map(n => {
+  n * 2
+})
+
+console.log(result)
+```
+
+**Answer:** `[undefined, undefined, undefined]` (not `[2, 4, 6]`!)
+
+**Why?** Arrow functions with `{}` have a **block body**, not an expression body. You must explicitly `return` a value.
+
+```ts
+// ❌ Block body without return
+n => {
+  n * 2
+}
+
+// ✅ Block body with return
+n => {
+  return n * 2
+}
+
+// ✅ Expression body (implicit return)
+n => n * 2
+```
+
+---
+
 ### typeof null
 
 **Question:** What does this return?
@@ -162,6 +199,43 @@ console.log("C")
 
 ---
 
+### Spread and Shallow Copy
+
+**Question:** What does this output?
+
+```ts
+const user = {
+  name: "Ian",
+  skills: ["JS"]
+}
+
+const copy = { ...user }
+copy.skills.push("React")
+
+console.log(user.skills)
+```
+
+**Answer:** `["JS", "React"]`
+
+**Why?** Spread (`...`) creates a **shallow copy**. Nested objects/arrays are still references to the original.
+
+| Level | Copied? |
+|-------|--------|
+| Top-level primitives | ✅ Yes (by value) |
+| Nested objects/arrays | ❌ No (same reference) |
+
+**Fix:** Deep clone for nested objects:
+
+```ts
+// Using structuredClone (modern)
+const deepCopy = structuredClone(user)
+
+// Using JSON (has limitations)
+const deepCopy = JSON.parse(JSON.stringify(user))
+```
+
+---
+
 ### this in Arrow Functions
 
 ```ts
@@ -176,6 +250,25 @@ obj.print() // undefined
 ```
 
 **Why?** Arrow functions capture `this` from their surrounding lexical scope (global scope here), which has no `value` property.
+
+**Key Point:** Arrow functions **do NOT have their own `this`**. They inherit it from the enclosing scope.
+
+#### When Arrow Functions Work for `this`
+
+```ts
+const user = {
+  name: "Ian",
+  greet() {
+    // Arrow function inherits `this` from greet()
+    return () => {
+      console.log(this.name) // "Ian"
+    }
+  }
+}
+
+const fn = user.greet()
+fn() // Works! Prints "Ian"
+```
 
 **Fix:** Use a regular function:
 
