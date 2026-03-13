@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Frontend Interview Quiz</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --success: #16a34a;
+      --error: #dc2626;
+      --bg: #0d1117;
+      --card-bg: #161b22;
+      --text: #e6edf3;
+      --text-muted: #8b949e;
+      --border: #30363d;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 0.5rem;
+      font-size: 2rem;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: var(--text-muted);
+      margin-bottom: 2rem;
+    }
+
+    .progress-bar {
+      background: var(--border);
+      border-radius: 10px;
+      height: 10px;
+      margin-bottom: 2rem;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      background: var(--primary);
+      height: 100%;
+      transition: width 0.3s ease;
+    }
+
+    .score-display {
+      text-align: center;
+      font-size: 1.1rem;
+      margin-bottom: 1.5rem;
+      color: var(--text-muted);
+    }
+
+    .score-display span {
+      color: var(--primary);
+      font-weight: bold;
+    }
+
+    .quiz-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .question-number {
+      color: var(--primary);
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .question-text {
+      font-size: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .code-block {
+      background: #0d1117;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      margin: 1rem 0;
+      font-family: 'Fira Code', 'Consolas', monospace;
+      font-size: 0.9rem;
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    .options {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .option {
+      background: var(--bg);
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .option:hover:not(.disabled) {
+      border-color: var(--primary);
+      background: rgba(37, 99, 235, 0.1);
+    }
+
+    .option.selected {
+      border-color: var(--primary);
+      background: rgba(37, 99, 235, 0.15);
+    }
+
+    .option.correct {
+      border-color: var(--success);
+      background: rgba(22, 163, 74, 0.15);
+    }
+
+    .option.incorrect {
+      border-color: var(--error);
+      background: rgba(220, 38, 38, 0.15);
+    }
+
+    .option.disabled {
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+
+    .option-letter {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 0.85rem;
+      flex-shrink: 0;
+    }
+
+    .option.correct .option-letter {
+      background: var(--success);
+    }
+
+    .option.incorrect .option-letter {
+      background: var(--error);
+    }
+
+    .explanation {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      background: rgba(37, 99, 235, 0.1);
+      border-left: 4px solid var(--primary);
+      border-radius: 0 8px 8px 0;
+      display: none;
+    }
+
+    .explanation.show {
+      display: block;
+    }
+
+    .explanation-title {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: var(--primary);
+    }
+
+    .btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.875rem 2rem;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .btn:hover {
+      background: var(--primary-dark);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 1.5rem;
+    }
+
+    .results {
+      text-align: center;
+      padding: 3rem 2rem;
+    }
+
+    .results h2 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    .results-score {
+      font-size: 4rem;
+      font-weight: bold;
+      color: var(--primary);
+      margin: 1.5rem 0;
+    }
+
+    .results-message {
+      font-size: 1.25rem;
+      color: var(--text-muted);
+      margin-bottom: 2rem;
+    }
+
+    .category-select {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      justify-content: center;
+      margin-bottom: 2rem;
+    }
+
+    .category-btn {
+      background: var(--card-bg);
+      border: 2px solid var(--border);
+      color: var(--text);
+      padding: 0.625rem 1.25rem;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 0.9rem;
+    }
+
+    .category-btn:hover, .category-btn.active {
+      border-color: var(--primary);
+      background: rgba(37, 99, 235, 0.15);
+    }
+
+    .start-screen {
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .start-screen h2 {
+      margin-bottom: 1rem;
+    }
+
+    .start-screen p {
+      color: var(--text-muted);
+      margin-bottom: 2rem;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .back-link {
+      display: inline-block;
+      color: var(--text-muted);
+      text-decoration: none;
+      margin-bottom: 1.5rem;
+      font-size: 0.9rem;
+    }
+
+    .back-link:hover {
+      color: var(--text);
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 1rem;
+      }
+
+      h1 {
+        font-size: 1.5rem;
+      }
+
+      .quiz-card {
+        padding: 1.25rem;
+      }
+
+      .question-text {
+        font-size: 1.1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="./" class="back-link">← Back to Study Guide</a>
+    
+    <h1>🧠 Frontend Interview Quiz</h1>
+    <p class="subtitle">Test your JavaScript, TypeScript & React knowledge</p>
+
+    <!-- Start Screen -->
+    <div id="start-screen" class="quiz-card start-screen">
+      <h2>Choose a Category</h2>
+      <p>Select one or more topics to quiz yourself on:</p>
+      
+      <div class="category-select">
+        <button class="category-btn active" data-category="all">All Topics</button>
+        <button class="category-btn" data-category="js-gotchas">JS Gotchas</button>
+        <button class="category-btn" data-category="js-concepts">JS Concepts</button>
+        <button class="category-btn" data-category="typescript">TypeScript</button>
+        <button class="category-btn" data-category="react">React</button>
+        <button class="category-btn" data-category="node">Node.js</button>
+      </div>
+
+      <button class="btn" onclick="startQuiz()">Start Quiz</button>
+    </div>
+
+    <!-- Quiz Screen -->
+    <div id="quiz-screen" class="hidden">
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+
+      <div class="score-display">
+        Score: <span id="current-score">0</span> / <span id="total-questions">0</span>
+      </div>
+
+      <div class="quiz-card" id="question-card">
+        <div class="question-number" id="question-number">Question 1</div>
+        <div class="question-text" id="question-text"></div>
+        <div class="code-block hidden" id="code-block"></div>
+        <div class="options" id="options"></div>
+        <div class="explanation" id="explanation">
+          <div class="explanation-title">💡 Explanation</div>
+          <div id="explanation-text"></div>
+        </div>
+      </div>
+
+      <div class="btn-container">
+        <div></div>
+        <button class="btn" id="next-btn" onclick="nextQuestion()" disabled>Next Question</button>
+      </div>
+    </div>
+
+    <!-- Results Screen -->
+    <div id="results-screen" class="quiz-card hidden results">
+      <h2>Quiz Complete!</h2>
+      <div class="results-score" id="final-score">0%</div>
+      <div class="results-message" id="results-message"></div>
+      <button class="btn" onclick="resetQuiz()">Try Again</button>
+    </div>
+  </div>
+
+  <script>
+    // Quiz Questions Database
+    const questions = {
+      'js-gotchas': [
+        {
+          question: "What does this code output?",
+          code: `console.log(typeof null)`,
+          options: ["\"null\"", "\"undefined\"", "\"object\"", "null"],
+          correct: 2,
+          explanation: "This is a historical bug in JavaScript. typeof null returns \"object\" even though null is a primitive. This was never fixed for backward compatibility."
+        },
+        {
+          question: "What does this code output?",
+          code: `console.log(typeof [])`,
+          options: ["\"array\"", "\"object\"", "\"Array\"", "\"undefined\""],
+          correct: 1,
+          explanation: "Arrays are objects in JavaScript. typeof [] returns \"object\". Use Array.isArray([]) to check for arrays."
+        },
+        {
+          question: "What does this code output?",
+          code: `console.log([] + [])`,
+          options: ["[]", "0", "\"\"", "undefined"],
+          correct: 2,
+          explanation: "The + operator converts arrays to primitives via .toString(). Empty arrays become empty strings, so \"\" + \"\" equals \"\"."
+        },
+        {
+          question: "What does this code output?",
+          code: `console.log("A")\nsetTimeout(() => console.log("B"), 0)\nconsole.log("C")`,
+          options: ["A B C", "A C B", "B A C", "C A B"],
+          correct: 1,
+          explanation: "setTimeout callbacks go into the event loop and execute after the current call stack is empty, even with 0ms delay. So: A, C (sync), then B (async)."
+        },
+        {
+          question: "What does this code output?",
+          code: `for (var i = 0; i < 3; i++) {\n  setTimeout(() => console.log(i), 0)\n}`,
+          options: ["0 1 2", "3 3 3", "0 0 0", "undefined undefined undefined"],
+          correct: 1,
+          explanation: "var is function-scoped, not block-scoped. When the callbacks run, the loop has finished and i equals 3. Use let instead to fix this."
+        },
+        {
+          question: "What does this code output?",
+          code: `const nums = [1, 2, 3]\nconst result = nums.map(n => { n * 2 })\nconsole.log(result)`,
+          options: ["[2, 4, 6]", "[undefined, undefined, undefined]", "[]", "Error"],
+          correct: 1,
+          explanation: "Arrow functions with {} need an explicit return statement. Without return, the function returns undefined. Use n => n * 2 or n => { return n * 2 }."
+        },
+        {
+          question: "What does this code output?",
+          code: `const a = { x: 1 }\nconst b = { x: 1 }\nconsole.log(a === b)`,
+          options: ["true", "false", "undefined", "Error"],
+          correct: 1,
+          explanation: "=== compares by reference for objects, not by value. a and b are different objects in memory, so they're not equal."
+        },
+        {
+          question: "What does this code output?",
+          code: `console.log(0.1 + 0.2 === 0.3)`,
+          options: ["true", "false", "0.3", "Error"],
+          correct: 1,
+          explanation: "Floating point arithmetic in JavaScript (and most languages) has precision issues. 0.1 + 0.2 equals 0.30000000000000004, not exactly 0.3."
+        }
+      ],
+      'js-concepts': [
+        {
+          question: "What is a closure in JavaScript?",
+          options: [
+            "A function that closes the browser",
+            "A function that remembers variables from its outer scope",
+            "A function without parameters",
+            "A function that cannot be called twice"
+          ],
+          correct: 1,
+          explanation: "A closure is a function that retains access to variables from its surrounding (lexical) scope, even after the outer function has returned."
+        },
+        {
+          question: "What does this code output?",
+          code: `function outer() {\n  let count = 0\n  return function() {\n    count++\n    return count\n  }\n}\nconst fn = outer()\nconsole.log(fn(), fn(), fn())`,
+          options: ["1 1 1", "1 2 3", "0 1 2", "undefined"],
+          correct: 1,
+          explanation: "This is a closure. The inner function remembers the count variable from outer(). Each call increments and returns the same count."
+        },
+        {
+          question: "What runs first: microtasks or macrotasks?",
+          options: ["Macrotasks", "Microtasks", "They run simultaneously", "Random order"],
+          correct: 1,
+          explanation: "Microtasks (Promises) run before macrotasks (setTimeout) after the current call stack is empty. This is why Promise.then() executes before setTimeout(..., 0)."
+        },
+        {
+          question: "What does call() do?",
+          options: [
+            "Creates a new function",
+            "Invokes a function with a specific 'this' value",
+            "Delays function execution",
+            "Copies a function"
+          ],
+          correct: 1,
+          explanation: "call() invokes a function immediately with a specified 'this' value and individual arguments. Similar to apply() which takes an array of arguments."
+        },
+        {
+          question: "What is the difference between == and ===?",
+          options: [
+            "No difference",
+            "=== is faster",
+            "== coerces types, === doesn't",
+            "=== only works with numbers"
+          ],
+          correct: 2,
+          explanation: "== (loose equality) coerces types before comparing (5 == \"5\" is true). === (strict equality) compares both value AND type without coercion."
+        },
+        {
+          question: "What does this code output?",
+          code: `const user = { name: \"Ian\", skills: [\"JS\"] }\nconst copy = { ...user }\ncopy.skills.push(\"React\")\nconsole.log(user.skills)`,
+          options: ["[\"JS\"]", "[\"JS\", \"React\"]", "undefined", "Error"],
+          correct: 1,
+          explanation: "Spread creates a shallow copy. Nested arrays/objects are still references. Modifying copy.skills affects user.skills because they point to the same array."
+        }
+      ],
+      'typescript': [
+        {
+          question: "What does Partial<T> do in TypeScript?",
+          options: [
+            "Makes all properties required",
+            "Makes all properties optional",
+            "Removes all properties",
+            "Duplicates all properties"
+          ],
+          correct: 1,
+          explanation: "Partial<T> creates a type with all properties of T set to optional. Useful for update functions where you only modify some fields."
+        },
+        {
+          question: "What is the difference between 'type' and 'interface'?",
+          options: [
+            "No difference",
+            "type supports unions, interface supports declaration merging",
+            "interface is faster",
+            "type can only be used for primitives"
+          ],
+          correct: 1,
+          explanation: "Types support union types (A | B). Interfaces support declaration merging (multiple declarations combine). Both can describe object shapes."
+        },
+        {
+          question: "What does this do?",
+          code: `type Status = \"loading\" | \"success\" | \"error\"`,
+          options: [
+            "Creates an array type",
+            "Creates a union/literal type",
+            "Creates an enum",
+            "Creates a class"
+          ],
+          correct: 1,
+          explanation: "This creates a union of string literal types. A variable of type Status can only be one of these three specific strings."
+        },
+        {
+          question: "What does Omit<User, \"email\"> do?",
+          options: [
+            "Adds email to User",
+            "Creates User type without the email property",
+            "Makes email required",
+            "Makes email optional"
+          ],
+          correct: 1,
+          explanation: "Omit<Type, Keys> creates a new type by excluding specified properties. Omit<User, \"email\"> returns User without the email field."
+        },
+        {
+          question: "What does 'as const' do?",
+          code: `const colors = [\"red\", \"green\"] as const`,
+          options: [
+            "Makes the array mutable",
+            "Makes values deeply readonly with literal types",
+            "Converts to a Set",
+            "Nothing, it's invalid syntax"
+          ],
+          correct: 1,
+          explanation: "'as const' makes values deeply readonly and infers literal types. The array becomes readonly [\"red\", \"green\"] instead of string[]."
+        },
+        {
+          question: "What is a type guard?",
+          options: [
+            "A function that protects types from being changed",
+            "A function that narrows types at runtime",
+            "A type that guards against null",
+            "An interface for security"
+          ],
+          correct: 1,
+          explanation: "Type guards are functions that narrow types at runtime. They use type predicates (value is Type) to help TypeScript understand the type after the check."
+        }
+      ],
+      'react': [
+        {
+          question: "What is the Virtual DOM?",
+          options: [
+            "A copy of the real DOM in memory for efficient updates",
+            "A new browser API",
+            "A database for React",
+            "A testing library"
+          ],
+          correct: 0,
+          explanation: "The Virtual DOM is a lightweight copy of the real DOM. React diffs the new virtual DOM with the previous one and only updates changed elements in the real DOM."
+        },
+        {
+          question: "When does useEffect with an empty dependency array run?",
+          options: [
+            "On every render",
+            "Only on mount (once)",
+            "Never",
+            "Only on unmount"
+          ],
+          correct: 1,
+          explanation: "useEffect(() => {}, []) runs only once when the component mounts. It's similar to componentDidMount in class components."
+        },
+        {
+          question: "What causes a React component to re-render?",
+          options: [
+            "Only state changes",
+            "Only prop changes",
+            "State change, prop change, or parent re-render",
+            "Only context changes"
+          ],
+          correct: 2,
+          explanation: "Components re-render when: their state changes, their props change, their parent re-renders, or a context they consume changes."
+        },
+        {
+          question: "What's wrong with using array index as a key?",
+          options: [
+            "It's slower",
+            "It can cause bugs when items are reordered/removed",
+            "React doesn't allow it",
+            "Nothing, it's fine"
+          ],
+          correct: 1,
+          explanation: "Using index as key can cause bugs when items are reordered, added, or removed. React may reuse wrong component instances, causing state to get mixed up."
+        },
+        {
+          question: "What's the difference between useRef and useState?",
+          options: [
+            "No difference",
+            "useRef doesn't cause re-renders when changed",
+            "useState is faster",
+            "useRef can only store DOM elements"
+          ],
+          correct: 1,
+          explanation: "useRef creates a mutable reference that persists across renders WITHOUT causing re-renders. useState triggers a re-render whenever the state changes."
+        },
+        {
+          question: "What is prop drilling?",
+          options: [
+            "A React performance optimization",
+            "Passing props through many component levels",
+            "A way to create components",
+            "A testing technique"
+          ],
+          correct: 1,
+          explanation: "Prop drilling is passing props through multiple intermediate components just to reach a deeply nested component. Solutions include Context API or state management libraries."
+        },
+        {
+          question: "What does React.memo do?",
+          options: [
+            "Memoizes expensive calculations",
+            "Prevents re-renders if props haven't changed",
+            "Creates a memo pad component",
+            "Stores data in memory"
+          ],
+          correct: 1,
+          explanation: "React.memo is a HOC that prevents re-renders if props haven't changed (shallow comparison). It's for performance optimization of expensive components."
+        },
+        {
+          question: "What's a controlled component?",
+          options: [
+            "A component with restricted access",
+            "A component where React controls form input state",
+            "A component that can't have children",
+            "A component with no props"
+          ],
+          correct: 1,
+          explanation: "In a controlled component, React state is the 'single source of truth' for form inputs. The input value is controlled by state and updated via onChange."
+        }
+      ],
+      'node': [
+        {
+          question: "What is Node.js?",
+          options: [
+            "A JavaScript framework",
+            "A JavaScript runtime built on V8 engine",
+            "A database",
+            "A frontend library"
+          ],
+          correct: 1,
+          explanation: "Node.js is a JavaScript runtime built on Chrome's V8 engine. It lets you run JavaScript outside the browser (servers, CLI tools, etc.)."
+        },
+        {
+          question: "What's the difference between dependencies and devDependencies?",
+          options: [
+            "No difference",
+            "dependencies are for runtime, devDependencies are for development only",
+            "devDependencies are faster",
+            "dependencies can't be updated"
+          ],
+          correct: 1,
+          explanation: "dependencies are needed at runtime (React, Express). devDependencies are only needed during development/build (TypeScript, Jest). Production installs skip devDependencies."
+        },
+        {
+          question: "What does package-lock.json do?",
+          options: [
+            "Locks the package.json from editing",
+            "Locks exact versions of all dependencies",
+            "Encrypts packages",
+            "Nothing important"
+          ],
+          correct: 1,
+          explanation: "package-lock.json locks exact versions of all dependencies (including nested ones). This ensures everyone gets the same versions for reproducible builds."
+        },
+        {
+          question: "What does npx do?",
+          options: [
+            "Installs packages globally",
+            "Runs packages without installing globally",
+            "Updates npm",
+            "Creates a new project"
+          ],
+          correct: 1,
+          explanation: "npx executes packages without installing them globally. It's useful for one-off commands like npx create-react-app without polluting global installs."
+        },
+        {
+          question: "What does ^ mean in \"^4.18.0\"?",
+          options: [
+            "Exactly this version",
+            "Any version starting with 4",
+            "Compatible version (4.18.0 to <5.0.0)",
+            "Latest version"
+          ],
+          correct: 2,
+          explanation: "The caret (^) means compatible version - allows minor and patch updates but not major. ^4.18.0 matches 4.18.0 to <5.0.0."
+        },
+        {
+          question: "What's the main difference between CommonJS and ES Modules?",
+          options: [
+            "No difference",
+            "CommonJS uses require(), ESM uses import/export",
+            "ESM is older",
+            "CommonJS only works in browsers"
+          ],
+          correct: 1,
+          explanation: "CommonJS uses require()/module.exports (synchronous, Node default). ES Modules use import/export (async, tree-shakeable, modern standard)."
+        }
+      ]
+    };
+
+    // Quiz State
+    let currentQuestions = [];
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let selectedCategory = 'all';
+    let answered = false;
+
+    // DOM Elements
+    const startScreen = document.getElementById('start-screen');
+    const quizScreen = document.getElementById('quiz-screen');
+    const resultsScreen = document.getElementById('results-screen');
+    const questionNumber = document.getElementById('question-number');
+    const questionText = document.getElementById('question-text');
+    const codeBlock = document.getElementById('code-block');
+    const optionsContainer = document.getElementById('options');
+    const explanation = document.getElementById('explanation');
+    const explanationText = document.getElementById('explanation-text');
+    const nextBtn = document.getElementById('next-btn');
+    const progressFill = document.getElementById('progress-fill');
+    const currentScoreEl = document.getElementById('current-score');
+    const totalQuestionsEl = document.getElementById('total-questions');
+
+    // Category Selection
+    document.querySelectorAll('.category-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedCategory = btn.dataset.category;
+      });
+    });
+
+    function shuffleArray(array) {
+      const shuffled = [...array];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled;
+    }
+
+    function startQuiz() {
+      // Gather questions based on category
+      if (selectedCategory === 'all') {
+        currentQuestions = shuffleArray(Object.values(questions).flat());
+      } else {
+        currentQuestions = shuffleArray(questions[selectedCategory] || []);
+      }
+
+      // Limit to 10 questions
+      currentQuestions = currentQuestions.slice(0, 10);
+
+      if (currentQuestions.length === 0) {
+        alert('No questions available for this category!');
+        return;
+      }
+
+      currentQuestionIndex = 0;
+      score = 0;
+      
+      startScreen.classList.add('hidden');
+      resultsScreen.classList.add('hidden');
+      quizScreen.classList.remove('hidden');
+
+      totalQuestionsEl.textContent = currentQuestions.length;
+      currentScoreEl.textContent = '0';
+
+      showQuestion();
+    }
+
+    function showQuestion() {
+      answered = false;
+      nextBtn.disabled = true;
+      explanation.classList.remove('show');
+
+      const q = currentQuestions[currentQuestionIndex];
+      
+      questionNumber.textContent = `Question ${currentQuestionIndex + 1} of ${currentQuestions.length}`;
+      questionText.textContent = q.question;
+
+      if (q.code) {
+        codeBlock.textContent = q.code;
+        codeBlock.classList.remove('hidden');
+      } else {
+        codeBlock.classList.add('hidden');
+      }
+
+      // Update progress
+      const progress = ((currentQuestionIndex) / currentQuestions.length) * 100;
+      progressFill.style.width = `${progress}%`;
+
+      // Render options
+      optionsContainer.innerHTML = '';
+      const letters = ['A', 'B', 'C', 'D'];
+      q.options.forEach((option, index) => {
+        const optionEl = document.createElement('div');
+        optionEl.className = 'option';
+        optionEl.innerHTML = `
+          <span class="option-letter">${letters[index]}</span>
+          <span>${escapeHtml(option)}</span>
+        `;
+        optionEl.addEventListener('click', () => selectOption(index));
+        optionsContainer.appendChild(optionEl);
+      });
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function selectOption(selectedIndex) {
+      if (answered) return;
+      answered = true;
+
+      const q = currentQuestions[currentQuestionIndex];
+      const options = optionsContainer.querySelectorAll('.option');
+
+      options.forEach((opt, index) => {
+        opt.classList.add('disabled');
+        if (index === q.correct) {
+          opt.classList.add('correct');
+        } else if (index === selectedIndex) {
+          opt.classList.add('incorrect');
+        }
+      });
+
+      if (selectedIndex === q.correct) {
+        score++;
+        currentScoreEl.textContent = score;
+      }
+
+      explanationText.textContent = q.explanation;
+      explanation.classList.add('show');
+      nextBtn.disabled = false;
+
+      // Update button text for last question
+      if (currentQuestionIndex === currentQuestions.length - 1) {
+        nextBtn.textContent = 'See Results';
+      }
+    }
+
+    function nextQuestion() {
+      currentQuestionIndex++;
+
+      if (currentQuestionIndex >= currentQuestions.length) {
+        showResults();
+      } else {
+        nextBtn.textContent = 'Next Question';
+        showQuestion();
+      }
+    }
+
+    function showResults() {
+      quizScreen.classList.add('hidden');
+      resultsScreen.classList.remove('hidden');
+
+      const percentage = Math.round((score / currentQuestions.length) * 100);
+      document.getElementById('final-score').textContent = `${percentage}%`;
+
+      let message = '';
+      if (percentage === 100) {
+        message = '🎉 Perfect! You\'re interview-ready!';
+      } else if (percentage >= 80) {
+        message = '🌟 Great job! Almost there!';
+      } else if (percentage >= 60) {
+        message = '👍 Good effort! Keep studying!';
+      } else if (percentage >= 40) {
+        message = '📚 Review the concepts and try again!';
+      } else {
+        message = '💪 Don\'t give up! Check out the study guide!';
+      }
+
+      document.getElementById('results-message').textContent = message;
+    }
+
+    function resetQuiz() {
+      resultsScreen.classList.add('hidden');
+      startScreen.classList.remove('hidden');
+      nextBtn.textContent = 'Next Question';
+    }
+  </script>
+</body>
+</html>

@@ -37,3 +37,4 @@ exclude:
 # Include README as the main page
 include:
   - README.md
+  - quiz.html

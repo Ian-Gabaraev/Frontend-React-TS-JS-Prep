@@ -2,6 +2,10 @@
 
 > A comprehensive guide to JavaScript and TypeScript concepts commonly asked in frontend interviews.
 
+### 🧠 [Take the Interactive Quiz →](quiz.html)
+
+Test your knowledge with the interactive quiz! Multiple choice questions covering JS gotchas, TypeScript, React, and Node.js.
+
 ---
 
 ## Table of Contents
