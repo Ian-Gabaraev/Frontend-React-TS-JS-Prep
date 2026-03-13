@@ -20,6 +20,13 @@
   - [OOP in JavaScript](#oop-in-javascript)
   - [Data Types](#data-types)
   - [Promises](#promises)
+  - [Hoisting](#hoisting)
+  - [this Binding](#this-binding)
+  - [Prototype Chain](#prototype-chain)
+  - [Event Bubbling and Capturing](#event-bubbling-and-capturing)
+  - [Debounce and Throttle](#debounce-and-throttle)
+  - [Error Handling](#error-handling)
+  - [Optional Chaining](#optional-chaining-)
   - [Arrow Functions](#arrow-functions)
   - [Single-Threaded Nature](#is-js-single-threaded)
   - [Microtasks vs Macrotasks](#microtasks-and-macrotasks)
@@ -39,6 +46,12 @@
   - [Record](#recordk-v)
   - [Pick](#pickt-k)
   - [Partial](#partialt)
+  - [Required](#requiredt)
+  - [Readonly](#readonlyt)
+  - [ReturnType](#returntypet)
+  - [Parameters](#parameterst)
+  - [Type Guards](#type-guards)
+  - [as const Assertions](#as-const-assertions)
 - [Node.js & Package Management](#nodejs--package-management)
   - [What is Node.js?](#what-is-nodejs)
   - [npm vs npx vs yarn vs pnpm](#npm-vs-npx-vs-yarn-vs-pnpm)
@@ -50,6 +63,29 @@
   - [Common npm Commands](#common-npm-commands)
   - [ES Modules vs CommonJS](#es-modules-vs-commonjs)
   - [Environment Variables](#environment-variables)
+- [React](#react)
+  - [What is React?](#what-is-react)
+  - [JSX](#jsx)
+  - [Components](#components)
+  - [Props](#props)
+  - [useState](#usestate)
+  - [useEffect](#useeffect)
+  - [useRef](#useref)
+  - [useMemo and useCallback](#usememo-and-usecallback)
+  - [useContext](#usecontext)
+  - [Custom Hooks](#custom-hooks)
+  - [Controlled vs Uncontrolled](#controlled-vs-uncontrolled-components)
+  - [Keys in Lists](#keys-in-lists)
+  - [Virtual DOM](#virtual-dom)
+  - [Component Lifecycle](#component-lifecycle)
+  - [React.memo](#reactmemo)
+  - [Fragments](#fragments)
+  - [Higher-Order Components](#higher-order-components-hoc)
+  - [Error Boundaries](#error-boundaries)
+  - [Suspense and Lazy Loading](#suspense-and-lazy-loading)
+  - [Portals](#portals)
+  - [Strict Mode](#strict-mode)
+  - [Common Interview Questions](#common-react-interview-questions)
 
 ---
 
@@ -376,6 +412,224 @@ const data = await res.json()
 Promise.resolve(5)
   .then(x => x * 2)
   .then(console.log) // 10
+```
+
+---
+
+### Hoisting
+
+**Hoisting** moves declarations to the top of their scope during compilation.
+
+```ts
+console.log(x) // undefined (not ReferenceError)
+var x = 5
+
+console.log(y) // ReferenceError: Cannot access 'y' before initialization
+let y = 5
+```
+
+| Declaration | Hoisted? | Initialized? |
+|-------------|----------|-------------|
+| `var` | ✅ | As `undefined` |
+| `let` / `const` | ✅ | ❌ (TDZ) |
+| `function` | ✅ | ✅ (fully) |
+| `class` | ✅ | ❌ (TDZ) |
+
+**Temporal Dead Zone (TDZ):** The period between entering a scope and the variable being declared. Accessing `let`/`const` in TDZ throws an error.
+
+---
+
+### this Binding
+
+`this` depends on **how** a function is called, not where it's defined.
+
+| Context | `this` Value |
+|---------|-------------|
+| Global (non-strict) | `window` / `global` |
+| Global (strict) | `undefined` |
+| Object method | The object |
+| Arrow function | Lexical (inherited) |
+| `new` constructor | The new instance |
+| `call`/`apply`/`bind` | Explicitly set |
+
+#### call, apply, bind
+
+```ts
+function greet(greeting) {
+  return `${greeting}, ${this.name}`
+}
+
+const user = { name: "Ian" }
+
+// call - invoke immediately, args as list
+greet.call(user, "Hello")        // "Hello, Ian"
+
+// apply - invoke immediately, args as array
+greet.apply(user, ["Hi"])        // "Hi, Ian"
+
+// bind - returns new function with bound `this`
+const boundGreet = greet.bind(user)
+boundGreet("Hey")                // "Hey, Ian"
+```
+
+---
+
+### Prototype Chain
+
+Every object has a hidden `[[Prototype]]` link to another object.
+
+```ts
+const animal = { eats: true }
+const dog = Object.create(animal)
+dog.barks = true
+
+console.log(dog.eats)   // true (inherited from animal)
+console.log(dog.barks)  // true (own property)
+```
+
+**Prototype Chain:**
+```
+dog -> animal -> Object.prototype -> null
+```
+
+**Interview Question:** "How does inheritance work in JavaScript?"
+- JS uses **prototypal inheritance**, not classical
+- Objects inherit directly from other objects
+- `class` syntax is just syntactic sugar over prototypes
+
+---
+
+### Event Bubbling and Capturing
+
+When an event occurs on a nested element:
+
+1. **Capturing phase:** Event travels DOWN from `window` to target
+2. **Target phase:** Event reaches the target element
+3. **Bubbling phase:** Event travels UP from target to `window`
+
+```ts
+// Bubbling (default)
+element.addEventListener('click', handler)
+
+// Capturing
+element.addEventListener('click', handler, true)
+// or
+element.addEventListener('click', handler, { capture: true })
+```
+
+#### Event Delegation
+
+Attach one listener to a parent instead of many to children:
+
+```ts
+// Instead of adding listener to each <li>
+document.querySelector('ul').addEventListener('click', (e) => {
+  if (e.target.tagName === 'LI') {
+    console.log('Clicked:', e.target.textContent)
+  }
+})
+```
+
+#### stopPropagation vs preventDefault
+
+| Method | Purpose |
+|--------|--------|
+| `e.stopPropagation()` | Stops event from bubbling/capturing further |
+| `e.preventDefault()` | Prevents default browser action (form submit, link navigation) |
+
+---
+
+### Debounce and Throttle
+
+Both limit how often a function executes.
+
+| Technique | Behavior | Use Case |
+|-----------|----------|----------|
+| **Debounce** | Wait until X ms of inactivity | Search input, resize |
+| **Throttle** | Execute at most once per X ms | Scroll, mousemove |
+
+#### Debounce Implementation
+
+```ts
+function debounce(fn, delay) {
+  let timeoutId
+  return (...args) => {
+    clearTimeout(timeoutId)
+    timeoutId = setTimeout(() => fn(...args), delay)
+  }
+}
+
+const search = debounce((query) => {
+  console.log('Searching:', query)
+}, 300)
+```
+
+#### Throttle Implementation
+
+```ts
+function throttle(fn, limit) {
+  let inThrottle
+  return (...args) => {
+    if (!inThrottle) {
+      fn(...args)
+      inThrottle = true
+      setTimeout(() => inThrottle = false, limit)
+    }
+  }
+}
+```
+
+---
+
+### Error Handling
+
+```ts
+try {
+  throw new Error("Something went wrong")
+} catch (error) {
+  console.error(error.message)
+} finally {
+  console.log("Always runs") // Cleanup code
+}
+```
+
+#### Async Error Handling
+
+```ts
+// With promises
+fetch('/api')
+  .then(res => res.json())
+  .catch(err => console.error(err))
+
+// With async/await
+async function fetchData() {
+  try {
+    const res = await fetch('/api')
+    return await res.json()
+  } catch (error) {
+    console.error('Fetch failed:', error)
+  }
+}
+```
+
+---
+
+### Optional Chaining (?.)
+
+Safely access nested properties without checking each level:
+
+```ts
+const user = { profile: { name: "Ian" } }
+
+// Without optional chaining
+const name = user && user.profile && user.profile.name
+
+// With optional chaining
+const name = user?.profile?.name // "Ian"
+
+// Works with methods and arrays
+user?.getAddress?.()
+users?.[0]?.name
 ```
 
 ---
@@ -737,6 +991,125 @@ type PartialUser = Partial<User>
 
 ---
 
+### Required<T>
+
+Makes **all properties required** (opposite of Partial).
+
+```ts
+type User = {
+  id?: number
+  name?: string
+}
+
+type RequiredUser = Required<User>
+// Result: { id: number; name: string }
+```
+
+---
+
+### Readonly<T>
+
+Makes **all properties readonly**.
+
+```ts
+type User = {
+  id: number
+  name: string
+}
+
+type ReadonlyUser = Readonly<User>
+// Cannot modify properties after creation
+```
+
+---
+
+### ReturnType<T>
+
+Extracts the **return type** of a function.
+
+```ts
+function getUser() {
+  return { id: 1, name: "Ian" }
+}
+
+type User = ReturnType<typeof getUser>
+// Result: { id: number; name: string }
+```
+
+---
+
+### Parameters<T>
+
+Extracts function **parameter types** as a tuple.
+
+```ts
+function greet(name: string, age: number) {}
+
+type GreetParams = Parameters<typeof greet>
+// Result: [string, number]
+```
+
+---
+
+### Type Guards
+
+Narrow types at runtime using type predicates:
+
+```ts
+function isString(value: unknown): value is string {
+  return typeof value === "string"
+}
+
+function process(value: string | number) {
+  if (isString(value)) {
+    console.log(value.toUpperCase()) // TS knows it's string
+  }
+}
+```
+
+#### Common Type Guards
+
+```ts
+// typeof
+if (typeof x === "string") { }
+
+// instanceof
+if (error instanceof Error) { }
+
+// in operator
+if ("name" in obj) { }
+
+// Array.isArray
+if (Array.isArray(items)) { }
+```
+
+---
+
+### as const Assertions
+
+Makes values **deeply readonly** and infers **literal types**:
+
+```ts
+const colors = ["red", "green", "blue"] as const
+// Type: readonly ["red", "green", "blue"]
+// Without: string[]
+
+const config = {
+  endpoint: "/api",
+  timeout: 3000
+} as const
+// All properties are readonly and literal typed
+```
+
+**Use case:** Creating union types from arrays:
+
+```ts
+const statuses = ["pending", "active", "done"] as const
+type Status = typeof statuses[number] // "pending" | "active" | "done"
+```
+
+---
+
 ### Type vs Interface
 
 | Feature | `type` | `interface` |
@@ -1048,6 +1421,604 @@ console.log(process.env.PORT) // "3000"
 - **Never commit `.env`** to git (add to `.gitignore`)
 - Use `.env.example` to document required variables (without values)
 - Different `.env` files for different environments (`.env.local`, `.env.production`)
+
+---
+
+## React
+
+### What is React?
+
+React is a **JavaScript library** for building user interfaces, created by Facebook.
+
+| Feature | Description |
+|---------|-------------|
+| **Component-based** | Build encapsulated components that manage their own state |
+| **Declarative** | Describe what UI should look like, React handles the DOM |
+| **Virtual DOM** | Efficient updates through diffing algorithm |
+| **Unidirectional** | Data flows one way (parent → child) |
+
+**React is a library, not a framework.** It handles only the view layer. You need additional libraries for routing, state management, etc.
+
+---
+
+### JSX
+
+JSX is a **syntax extension** that looks like HTML but compiles to JavaScript.
+
+```tsx
+// JSX
+const element = <h1 className="title">Hello, {name}!</h1>
+
+// Compiles to
+const element = React.createElement('h1', { className: 'title' }, `Hello, ${name}!`)
+```
+
+#### JSX Rules
+
+| Rule | Example |
+|------|---------|
+| Return single root element | Wrap in `<div>` or `<>...</>` |
+| Close all tags | `<img />`, `<br />` |
+| camelCase attributes | `className`, `onClick`, `htmlFor` |
+| JavaScript in curly braces | `{variable}`, `{2 + 2}` |
+
+---
+
+### Components
+
+#### Functional Components (Modern)
+
+```tsx
+function Greeting({ name }: { name: string }) {
+  return <h1>Hello, {name}!</h1>
+}
+
+// Arrow function
+const Greeting = ({ name }: { name: string }) => {
+  return <h1>Hello, {name}!</h1>
+}
+```
+
+#### Class Components (Legacy)
+
+```tsx
+class Greeting extends React.Component<{ name: string }> {
+  render() {
+    return <h1>Hello, {this.props.name}!</h1>
+  }
+}
+```
+
+**Interview Tip:** Know both, but functional components with hooks are the modern standard.
+
+---
+
+### Props
+
+Props are **read-only** inputs passed from parent to child.
+
+```tsx
+// Parent
+<UserCard name="Ian" age={30} isAdmin={true} />
+
+// Child
+function UserCard({ name, age, isAdmin }: Props) {
+  return <div>{name} is {age} years old</div>
+}
+```
+
+#### children Prop
+
+```tsx
+function Card({ children }: { children: React.ReactNode }) {
+  return <div className="card">{children}</div>
+}
+
+// Usage
+<Card>
+  <h1>Title</h1>
+  <p>Content</p>
+</Card>
+```
+
+#### Default Props
+
+```tsx
+function Button({ variant = "primary" }: { variant?: string }) {
+  return <button className={variant}>Click</button>
+}
+```
+
+---
+
+### useState
+
+Adds **state** to functional components.
+
+```tsx
+import { useState } from 'react'
+
+function Counter() {
+  const [count, setCount] = useState(0)
+
+  return (
+    <button onClick={() => setCount(count + 1)}>
+      Count: {count}
+    </button>
+  )
+}
+```
+
+#### Important Rules
+
+```tsx
+// ✅ Functional update (when new state depends on old)
+setCount(prev => prev + 1)
+
+// ❌ Direct mutation (won't trigger re-render)
+state.push(item)
+
+// ✅ Create new reference
+setItems([...items, newItem])
+setUser({ ...user, name: "New Name" })
+```
+
+**Interview Question:** "Why can't you mutate state directly?"
+- React uses **reference equality** to detect changes
+- Mutating doesn't change the reference
+- Component won't re-render
+
+---
+
+### useEffect
+
+Handles **side effects**: data fetching, subscriptions, DOM manipulation.
+
+```tsx
+import { useEffect, useState } from 'react'
+
+function User({ userId }: { userId: string }) {
+  const [user, setUser] = useState(null)
+
+  useEffect(() => {
+    fetch(`/api/users/${userId}`)
+      .then(res => res.json())
+      .then(setUser)
+  }, [userId]) // Re-run when userId changes
+
+  return <div>{user?.name}</div>
+}
+```
+
+#### Dependency Array
+
+| Dependency | Behavior |
+|------------|----------|
+| `[]` (empty) | Run once on mount |
+| `[a, b]` | Run when `a` or `b` changes |
+| No array | Run on every render (avoid!) |
+
+#### Cleanup Function
+
+```tsx
+useEffect(() => {
+  const subscription = api.subscribe()
+  
+  return () => {
+    subscription.unsubscribe() // Cleanup on unmount
+  }
+}, [])
+```
+
+---
+
+### useRef
+
+Creates a **mutable reference** that persists across renders.
+
+#### DOM Access
+
+```tsx
+function TextInput() {
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const focus = () => {
+    inputRef.current?.focus()
+  }
+
+  return <input ref={inputRef} />
+}
+```
+
+#### Mutable Value (no re-render)
+
+```tsx
+function Timer() {
+  const countRef = useRef(0)
+
+  // Changing countRef.current doesn't cause re-render
+  countRef.current++
+}
+```
+
+**Interview Question:** "What's the difference between useRef and useState?"
+- `useState`: triggers re-render on change
+- `useRef`: does NOT trigger re-render, persists value
+
+---
+
+### useMemo and useCallback
+
+Both are for **performance optimization** — memoize values/functions.
+
+#### useMemo - Memoize Values
+
+```tsx
+const expensiveValue = useMemo(() => {
+  return computeExpensiveValue(a, b)
+}, [a, b]) // Recompute only when a or b changes
+```
+
+#### useCallback - Memoize Functions
+
+```tsx
+const handleClick = useCallback(() => {
+  console.log('Clicked', id)
+}, [id]) // New function only when id changes
+```
+
+**When to use:**
+- `useMemo`: Expensive calculations
+- `useCallback`: Passing callbacks to optimized child components
+
+**Interview Tip:** Don't overuse! Premature optimization can hurt performance.
+
+---
+
+### useContext
+
+Share data without prop drilling.
+
+```tsx
+// 1. Create context
+const ThemeContext = React.createContext('light')
+
+// 2. Provide value
+function App() {
+  return (
+    <ThemeContext.Provider value="dark">
+      <Navbar />
+    </ThemeContext.Provider>
+  )
+}
+
+// 3. Consume (anywhere in tree)
+function Navbar() {
+  const theme = useContext(ThemeContext)
+  return <nav className={theme}>...</nav>
+}
+```
+
+---
+
+### Custom Hooks
+
+Extract reusable logic into custom hooks (must start with `use`).
+
+```tsx
+function useLocalStorage<T>(key: string, initialValue: T) {
+  const [value, setValue] = useState<T>(() => {
+    const stored = localStorage.getItem(key)
+    return stored ? JSON.parse(stored) : initialValue
+  })
+
+  useEffect(() => {
+    localStorage.setItem(key, JSON.stringify(value))
+  }, [key, value])
+
+  return [value, setValue] as const
+}
+
+// Usage
+const [name, setName] = useLocalStorage('name', '')
+```
+
+---
+
+### Controlled vs Uncontrolled Components
+
+| Type | State Location | Example |
+|------|---------------|---------|
+| **Controlled** | React state | `<input value={value} onChange={...} />` |
+| **Uncontrolled** | DOM (ref) | `<input ref={inputRef} />` |
+
+#### Controlled (Recommended)
+
+```tsx
+function Form() {
+  const [value, setValue] = useState('')
+
+  return (
+    <input 
+      value={value} 
+      onChange={(e) => setValue(e.target.value)} 
+    />
+  )
+}
+```
+
+#### Uncontrolled
+
+```tsx
+function Form() {
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const handleSubmit = () => {
+    console.log(inputRef.current?.value)
+  }
+
+  return <input ref={inputRef} defaultValue="" />
+}
+```
+
+---
+
+### Keys in Lists
+
+Keys help React identify which items changed, added, or removed.
+
+```tsx
+// ✅ Unique, stable ID
+{items.map(item => (
+  <li key={item.id}>{item.name}</li>
+))}
+
+// ❌ Index as key (avoid if list can reorder)
+{items.map((item, index) => (
+  <li key={index}>{item.name}</li>
+))}
+```
+
+**Interview Question:** "Why not use index as key?"
+- Causes bugs when items are reordered, added, or removed
+- React may reuse wrong component instances
+- State can get mixed up
+
+---
+
+### Virtual DOM
+
+React maintains a **lightweight copy** of the real DOM in memory.
+
+**Reconciliation Process:**
+1. State changes → new Virtual DOM tree created
+2. React **diffs** new tree with previous
+3. Only changed elements are updated in real DOM
+
+**Why it's fast:**
+- Batch updates
+- Minimal DOM manipulation
+- Efficient diffing algorithm (O(n) complexity)
+
+---
+
+### Component Lifecycle
+
+#### Class Component Lifecycle
+
+| Phase | Methods |
+|-------|---------|
+| **Mounting** | `constructor` → `render` → `componentDidMount` |
+| **Updating** | `render` → `componentDidUpdate` |
+| **Unmounting** | `componentWillUnmount` |
+
+#### Hooks Equivalents
+
+| Lifecycle | Hook |
+|-----------|------|
+| `componentDidMount` | `useEffect(() => {}, [])` |
+| `componentDidUpdate` | `useEffect(() => {}, [deps])` |
+| `componentWillUnmount` | `useEffect(() => () => cleanup, [])` |
+
+---
+
+### React.memo
+
+Prevents re-renders if props haven't changed (shallow comparison).
+
+```tsx
+const ExpensiveComponent = React.memo(({ data }: Props) => {
+  return <div>{/* expensive render */}</div>
+})
+
+// Custom comparison
+const MemoizedComponent = React.memo(Component, (prevProps, nextProps) => {
+  return prevProps.id === nextProps.id
+})
+```
+
+---
+
+### Fragments
+
+Group elements without adding extra DOM nodes.
+
+```tsx
+// Short syntax
+<>
+  <Header />
+  <Main />
+  <Footer />
+</>
+
+// With keys (required in loops)
+<React.Fragment key={item.id}>
+  <dt>{item.term}</dt>
+  <dd>{item.description}</dd>
+</React.Fragment>
+```
+
+---
+
+### Higher-Order Components (HOC)
+
+A function that takes a component and returns an enhanced component.
+
+```tsx
+function withLoading<P>(Component: React.ComponentType<P>) {
+  return function WithLoadingComponent({ isLoading, ...props }: P & { isLoading: boolean }) {
+    if (isLoading) return <div>Loading...</div>
+    return <Component {...props as P} />
+  }
+}
+
+// Usage
+const UserListWithLoading = withLoading(UserList)
+```
+
+**Note:** Hooks have largely replaced HOCs in modern React.
+
+---
+
+### Error Boundaries
+
+Catch JavaScript errors in child components (class components only).
+
+```tsx
+class ErrorBoundary extends React.Component<Props, State> {
+  state = { hasError: false }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true }
+  }
+
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    console.error('Error:', error, info)
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return <h1>Something went wrong.</h1>
+    }
+    return this.props.children
+  }
+}
+
+// Usage
+<ErrorBoundary>
+  <MyComponent />
+</ErrorBoundary>
+```
+
+---
+
+### Suspense and Lazy Loading
+
+Load components lazily to reduce bundle size.
+
+```tsx
+import { Suspense, lazy } from 'react'
+
+// Lazy load component
+const HeavyComponent = lazy(() => import('./HeavyComponent'))
+
+function App() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <HeavyComponent />
+    </Suspense>
+  )
+}
+```
+
+---
+
+### Portals
+
+Render children outside the parent DOM hierarchy.
+
+```tsx
+import { createPortal } from 'react-dom'
+
+function Modal({ children }: { children: React.ReactNode }) {
+  return createPortal(
+    <div className="modal">{children}</div>,
+    document.getElementById('modal-root')!
+  )
+}
+```
+
+**Use cases:** Modals, tooltips, dropdowns that need to escape overflow/z-index.
+
+---
+
+### Strict Mode
+
+Development tool that highlights potential problems.
+
+```tsx
+<React.StrictMode>
+  <App />
+</React.StrictMode>
+```
+
+**What it does:**
+- Double-invokes functions to detect side effects
+- Warns about deprecated lifecycle methods
+- Warns about legacy string refs
+- Detects unexpected side effects
+
+---
+
+### Common React Interview Questions
+
+#### 1. What is the difference between state and props?
+
+| Props | State |
+|-------|-------|
+| Passed from parent | Local to component |
+| Read-only | Mutable via setter |
+| Used for configuration | Used for dynamic data |
+
+#### 2. What causes a re-render?
+
+- State change
+- Props change
+- Parent re-renders
+- Context change
+
+#### 3. What is prop drilling and how to avoid it?
+
+**Prop drilling:** Passing props through many levels of components.
+
+**Solutions:**
+- Context API
+- State management (Redux, Zustand)
+- Component composition
+
+#### 4. What are the rules of hooks?
+
+1. Only call hooks at the **top level** (not in loops, conditions)
+2. Only call hooks from **React functions** (components or custom hooks)
+
+#### 5. Explain the useEffect cleanup function
+
+```tsx
+useEffect(() => {
+  const subscription = api.subscribe()
+  
+  return () => subscription.unsubscribe() // Runs before effect re-runs or unmount
+}, [])
+```
+
+#### 6. How do you optimize React performance?
+
+- `React.memo` for expensive components
+- `useMemo` / `useCallback` for expensive computations
+- Lazy loading with `Suspense`
+- Virtualization for long lists
+- Avoid inline objects/functions as props
+- Use production builds
 
 ---
 
