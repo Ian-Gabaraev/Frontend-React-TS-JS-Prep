@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Home
+title: Typescript & React
 ---
 
 {% include_relative README.md %}
