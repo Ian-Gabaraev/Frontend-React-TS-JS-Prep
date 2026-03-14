@@ -70,6 +70,10 @@ Test your knowledge with the interactive quiz! Multiple choice questions coverin
   - [ES Modules vs CommonJS](#es-modules-vs-commonjs)
   - [Environment Variables](#environment-variables)
 - [React](#react)
+  - [The React Mental Model](#the-react-mental-model)
+  - [State In-Depth](#state-in-depth)
+  - [Props In-Depth](#props-in-depth)
+  - [Re-rendering In-Depth](#re-rendering-in-depth)
   - [What is React?](#what-is-react)
   - [JSX](#jsx)
   - [Components](#components)
@@ -1522,6 +1526,381 @@ console.log(process.env.PORT) // "3000"
 ---
 
 ## React
+
+### The React Mental Model
+
+Understanding React's core philosophy is crucial for interviews.
+
+#### Declarative vs Imperative
+
+```tsx
+// ❌ Imperative (jQuery style) - HOW to do it
+const button = document.getElementById('btn')
+button.textContent = 'Clicked!'
+button.classList.add('active')
+
+// ✅ Declarative (React) - WHAT should be shown
+function Button({ isActive }: { isActive: boolean }) {
+  return (
+    <button className={isActive ? 'active' : ''}>
+      {isActive ? 'Clicked!' : 'Click me'}
+    </button>
+  )
+}
+```
+
+**Key Insight:** In React, you describe the **end state** of your UI based on data. React figures out how to update the DOM.
+
+#### The Component Tree
+
+```
+       App
+      /   \
+   Header  Main
+            |
+         UserList
+         /   |   \
+      User User User
+```
+
+- Data flows **DOWN** (parent → child via props)
+- Events flow **UP** (child → parent via callbacks)
+- Each component is an **isolated unit** with its own state
+
+#### UI = f(state)
+
+The most important formula in React:
+
+```
+UI = f(state)
+```
+
+- Your UI is a **function of your state**
+- When state changes, the UI **automatically** reflects it
+- You never manually update the DOM
+
+---
+
+### State In-Depth
+
+State is **data that changes over time** and triggers re-renders.
+
+#### When to Use State
+
+| Use State For | Don't Use State For |
+|---------------|---------------------|
+| User input | Constant values |
+| API responses | Props (use them directly) |
+| UI toggles (open/closed) | Derived/computed values |
+| Form data | Refs (no re-render needed) |
+
+#### Derived State Anti-Pattern
+
+```tsx
+// ❌ BAD: Storing derived state
+function UserList({ users }) {
+  const [filteredUsers, setFilteredUsers] = useState(users)
+  const [search, setSearch] = useState('')
+  
+  useEffect(() => {
+    setFilteredUsers(users.filter(u => u.name.includes(search)))
+  }, [users, search])
+  
+  return /* ... */
+}
+
+// ✅ GOOD: Compute during render
+function UserList({ users }) {
+  const [search, setSearch] = useState('')
+  
+  // Derived value - no state needed!
+  const filteredUsers = users.filter(u => u.name.includes(search))
+  
+  return /* ... */
+}
+```
+
+**Rule:** If you can calculate something from existing state/props, don't store it in state.
+
+#### State Batching
+
+React batches multiple state updates into a single re-render:
+
+```tsx
+function handleClick() {
+  setCount(c => c + 1)  // Does NOT re-render yet
+  setFlag(f => !f)      // Does NOT re-render yet
+  setName('Ian')        // NOW React re-renders once
+}
+```
+
+**Interview Question:** "How many times does this component re-render?"
+```tsx
+function handleClick() {
+  setCount(1)
+  setCount(2)
+  setCount(3)
+}
+```
+**Answer:** Once! React batches all three into a single re-render with count = 3.
+
+#### State Updates are Asynchronous
+
+```tsx
+const [count, setCount] = useState(0)
+
+function handleClick() {
+  setCount(count + 1)
+  console.log(count) // Still 0! State hasn't updated yet
+}
+```
+
+**Fix:** Use functional updates or useEffect:
+
+```tsx
+// Option 1: Functional update for next value
+setCount(prev => {
+  console.log(prev + 1)  // Correct value
+  return prev + 1
+})
+
+// Option 2: useEffect to react to state changes
+useEffect(() => {
+  console.log(count)  // Runs after count updates
+}, [count])
+```
+
+#### State vs Ref
+
+| Feature | useState | useRef |
+|---------|----------|--------|
+| Triggers re-render | ✅ Yes | ❌ No |
+| Persists across renders | ✅ Yes | ✅ Yes |
+| Use for | UI data | DOM refs, timers, previous values |
+
+---
+
+### Props In-Depth
+
+Props are **read-only data** passed from parent to child.
+
+#### Props are Immutable
+
+```tsx
+// ❌ NEVER do this
+function Child({ user }) {
+  user.name = 'Modified'  // Mutating props!
+}
+
+// ✅ Lift state up or use callbacks
+function Child({ user, onUpdate }) {
+  const handleClick = () => {
+    onUpdate({ ...user, name: 'Modified' })
+  }
+}
+```
+
+#### Passing Functions as Props
+
+```tsx
+// Parent
+function Parent() {
+  const [count, setCount] = useState(0)
+  
+  return <Child onIncrement={() => setCount(c => c + 1)} />
+}
+
+// Child
+function Child({ onIncrement }: { onIncrement: () => void }) {
+  return <button onClick={onIncrement}>Add</button>
+}
+```
+
+This is how children communicate with parents (events flow up).
+
+#### Prop Types with TypeScript
+
+```tsx
+// Define prop types
+interface UserCardProps {
+  name: string
+  age: number
+  email?: string  // Optional
+  onDelete: (id: string) => void
+  children?: React.ReactNode
+}
+
+function UserCard({ name, age, email = 'N/A', onDelete, children }: UserCardProps) {
+  return (
+    <div>
+      <h2>{name}</h2>
+      <p>Age: {age}</p>
+      <p>Email: {email}</p>
+      {children}
+    </div>
+  )
+}
+```
+
+#### Spreading Props
+
+```tsx
+// Pass all props to a child
+function Button({ className, ...rest }: ButtonProps) {
+  return <button className={`btn ${className}`} {...rest} />
+}
+
+// Usage
+<Button className="primary" onClick={handleClick} disabled>
+  Click me
+</Button>
+```
+
+#### Children Patterns
+
+```tsx
+// 1. Simple children
+<Card>
+  <p>Content</p>
+</Card>
+
+// 2. Render props (function as children)
+<DataFetcher url="/api/users">
+  {(data, loading) => loading ? <Spinner /> : <UserList users={data} />}
+</DataFetcher>
+
+// 3. Compound components
+<Tabs>
+  <Tabs.Tab>Tab 1</Tabs.Tab>
+  <Tabs.Panel>Content 1</Tabs.Panel>
+</Tabs>
+```
+
+---
+
+### Re-rendering In-Depth
+
+Understanding when and why React re-renders is critical for performance.
+
+#### What Triggers a Re-render?
+
+| Trigger | Example |
+|---------|---------|
+| **State change** | `setState(newValue)` |
+| **Props change** | Parent passes new props |
+| **Parent re-renders** | Parent re-renders → children re-render |
+| **Context change** | Provider value changes |
+
+**Common Misconception:** Changing a variable does NOT trigger a re-render:
+
+```tsx
+let count = 0
+
+function Counter() {
+  const handleClick = () => {
+    count++  // ❌ This does NOT re-render!
+    console.log(count)  // Value changes, but UI doesn't update
+  }
+  
+  return <button onClick={handleClick}>{count}</button>
+}
+```
+
+#### The Re-render Cascade
+
+When a component re-renders, **all its children re-render too** (by default):
+
+```
+     App (state changes)
+      ↓ re-renders
+    Header ← re-renders (even if props didn't change!)
+      ↓
+    Logo ← re-renders
+```
+
+#### Preventing Unnecessary Re-renders
+
+**1. React.memo** - Skip re-render if props unchanged:
+
+```tsx
+const ExpensiveChild = React.memo(function ExpensiveChild({ data }) {
+  console.log('Rendering...')  // Only logs when 'data' changes
+  return <div>{/* expensive render */}</div>
+})
+```
+
+**2. useCallback** - Stable function reference:
+
+```tsx
+// ❌ New function every render → child re-renders
+<Child onClick={() => doSomething()} />
+
+// ✅ Stable reference → child can be memoized
+const handleClick = useCallback(() => doSomething(), [])
+<MemoizedChild onClick={handleClick} />
+```
+
+**3. useMemo** - Stable object/array reference:
+
+```tsx
+// ❌ New object every render
+<Child style={{ color: 'red' }} />
+
+// ✅ Stable reference
+const style = useMemo(() => ({ color: 'red' }), [])
+<Child style={style} />
+```
+
+#### Common Re-render Pitfalls
+
+**Pitfall 1: Inline objects/arrays**
+
+```tsx
+// ❌ Creates new array every render
+<List items={items.filter(i => i.active)} />
+
+// ✅ Memoize the filtered list
+const activeItems = useMemo(() => items.filter(i => i.active), [items])
+<List items={activeItems} />
+```
+
+**Pitfall 2: Inline functions**
+
+```tsx
+// ❌ Creates new function every render
+<Button onClick={() => handleClick(id)} />
+
+// ✅ Use useCallback
+const handleButtonClick = useCallback(() => handleClick(id), [id])
+<Button onClick={handleButtonClick} />
+```
+
+**Pitfall 3: Context causes all consumers to re-render**
+
+```tsx
+// ❌ All consumers re-render when ANY value changes
+const AppContext = createContext({ user: null, theme: 'light', settings: {} })
+
+// ✅ Split contexts by update frequency
+const UserContext = createContext(null)
+const ThemeContext = createContext('light')
+```
+
+#### How to Debug Re-renders
+
+```tsx
+// 1. Add console.log in component body
+function MyComponent() {
+  console.log('MyComponent rendering')
+  return <div>...</div>
+}
+
+// 2. Use React DevTools Profiler
+
+// 3. Use why-did-you-render library
+```
+
+---
 
 ### What is React?
 
