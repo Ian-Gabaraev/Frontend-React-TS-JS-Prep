@@ -11,6 +11,8 @@ Test your knowledge with the interactive quiz! Multiple choice questions coverin
 ## Table of Contents
 
 - [Quick Reference](#quick-reference)
+- [React Gotchas](#react-gotchas)
+  - [Mutating State Reference](#mutating-state-reference)
 - [JavaScript Gotchas](#javascript-gotchas)
   - [Arrow Function Block Body](#arrow-function-block-body)
   - [typeof null](#typeof-null)
@@ -108,7 +110,47 @@ Test your knowledge with the interactive quiz! Multiple choice questions coverin
 
 ---
 
+## React Gotchas
+
+### Manually updating state
+
+Why will this not make React re-render the component?
+
+```ts
+logs.push("D")
+setLogs(logs)
+```
+
+Because react does not care about the content, it cares about references.
+
+Internally, react does this:
+
+```ts
+if (oldState === newState)
+    skip render
+else
+    render
+```
+
+So when you do this
+
+```ts
+setLogs(logs)
+```
+
+Logs is still the same array object in memory. `You mutated it`, but the `reference didn’t change`.
+
 ## JavaScript Gotchas
+
+### [] == ![]
+
+What is the output?
+
+```ts
+console.log([] == ![])
+```
+
+Surprisingly, it is `true`. In JavaScript, all objects are truthy, including arrays. So `![]` is the same as `!true`. Then coercion happens. And now `[] == !true`. Now `[]` is considered `0`. So `0 == false`. And that is true. JS is insane.
 
 ### Arrow Function Block Body
 
