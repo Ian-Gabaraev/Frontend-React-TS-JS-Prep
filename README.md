@@ -2556,7 +2556,16 @@ useEffect(() => {
 
 ### useRef
 
-Creates a **mutable reference** that persists across renders.
+Creates a **mutable reference** that persists across renders without causing re-renders.
+
+#### When to Use useRef
+
+| Use Case | Example |
+|----------|---------|
+| **DOM access** | Focus input, scroll to element, measure size |
+| **Store mutable value** | Previous state, timer IDs, counters |
+| **Avoid re-renders** | Values that change but don't need UI update |
+| **Integration with external libraries** | Store instance of third-party lib |
 
 #### DOM Access
 
@@ -2572,20 +2581,74 @@ function TextInput() {
 }
 ```
 
-#### Mutable Value (no re-render)
+#### Store Previous Value
 
 ```tsx
-function Timer() {
-  const countRef = useRef(0)
+function Counter() {
+  const [count, setCount] = useState(0)
+  const prevCountRef = useRef<number>()
 
-  // Changing countRef.current doesn't cause re-render
-  countRef.current++
+  useEffect(() => {
+    prevCountRef.current = count  // Update after render
+  })
+
+  return (
+    <div>
+      Now: {count}, Before: {prevCountRef.current}
+    </div>
+  )
 }
 ```
 
+#### Store Timer/Interval IDs
+
+```tsx
+function Timer() {
+  const intervalRef = useRef<number | null>(null)
+
+  const start = () => {
+    intervalRef.current = setInterval(() => console.log('tick'), 1000)
+  }
+
+  const stop = () => {
+    if (intervalRef.current) clearInterval(intervalRef.current)
+  }
+
+  useEffect(() => {
+    return () => stop()  // Cleanup on unmount
+  }, [])
+}
+```
+
+#### Mutable Value (no re-render)
+
+```tsx
+function ClickTracker() {
+  const countRef = useRef(0)
+
+  const handleClick = () => {
+    countRef.current++  // Doesn't trigger re-render!
+    console.log(`Clicked ${countRef.current} times`)
+  }
+
+  return <button onClick={handleClick}>Click me</button>
+}
+```
+
+#### useRef vs useState
+
+| Feature | useState | useRef |
+|---------|----------|--------|
+| **Triggers re-render** | ✅ Yes | ❌ No |
+| **Persists across renders** | ✅ Yes | ✅ Yes |
+| **Access pattern** | `value` | `ref.current` |
+| **Use for** | UI state | DOM refs, timers, previous values |
+
 **Interview Question:** "What's the difference between useRef and useState?"
-- `useState`: triggers re-render on change
-- `useRef`: does NOT trigger re-render, persists value
+- `useState`: triggers re-render on change, for data that affects UI
+- `useRef`: does NOT trigger re-render, for DOM access or values that shouldn't cause updates
+
+> **Key insight:** If you need to store a value that changes but shouldn't trigger a re-render, use `useRef`. If the value should update the UI, use `useState`.
 
 ---
 
