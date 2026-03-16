@@ -18,6 +18,11 @@ Test your knowledge with the interactive quiz! Multiple choice questions coverin
   - [Controlled Components](#controlled-components)
   - [Lifting State Up](#lifting-state-up)
   - [Mutating State Reference](#mutating-state-reference)
+  - [useEffect Dependencies](#useeffect-dependencies)
+  - [useEffect Cleanup](#useeffect-cleanup)
+  - [Keys in Lists](#keys-in-lists)
+  - [Rules of Hooks](#rules-of-hooks)
+  - [Async in useEffect](#async-in-useeffect)
 - [JavaScript Gotchas](#javascript-gotchas)
   - [[] == ![]](#---)
   - [Arrow Function Block Body](#arrow-function-block-body)
@@ -30,6 +35,14 @@ Test your knowledge with the interactive quiz! Multiple choice questions coverin
   - [Timeout with var](#timeout-with-var)
   - [Closures](#closures)
   - [Object Reference Assignment](#object-reference-assignment)
+  - [Array.sort() Default Behavior](#arraysort-default-behavior)
+  - [NaN Comparisons](#nan-comparisons)
+  - [Floating Point Precision](#floating-point-precision)
+  - [const with Objects](#const-with-objects)
+  - [Temporal Dead Zone](#temporal-dead-zone-tdz)
+  - [parseInt Radix](#parseint-radix)
+  - [Hoisting Differences](#hoisting-differences)
+  - [delete Keyword](#delete-keyword)
 - [Core JavaScript Concepts](#core-javascript-concepts)
   - [OOP in JavaScript](#oop-in-javascript)
   - [Data Types](#data-types)
@@ -289,7 +302,199 @@ So when you do this
 setLogs(logs)
 ```
 
-Logs is still the same array object in memory. `You mutated it`, but the `reference didn’t change`.
+Logs is still the same array object in memory. `You mutated it`, but the `reference didn't change`.
+
+---
+
+### useEffect Dependencies
+
+**Question:** What's the difference between these?
+
+```tsx
+// 1. No dependency array
+useEffect(() => {
+  console.log("runs")
+})
+
+// 2. Empty dependency array
+useEffect(() => {
+  console.log("runs")
+}, [])
+
+// 3. With dependencies
+useEffect(() => {
+  console.log("runs")
+}, [count])
+```
+
+**Answer:**
+
+| Syntax | When it runs |
+|--------|--------------|
+| No array | **Every render** |
+| `[]` | **Mount only** (once) |
+| `[count]` | **Mount + when count changes** |
+
+**Common mistake:** Forgetting dependencies causes stale closures:
+
+```tsx
+// ❌ Bug: always logs initial count
+useEffect(() => {
+  setInterval(() => console.log(count), 1000)
+}, [])  // count is stale!
+
+// ✅ Fix: include count in deps
+useEffect(() => {
+  const id = setInterval(() => console.log(count), 1000)
+  return () => clearInterval(id)
+}, [count])
+```
+
+---
+
+### useEffect Cleanup
+
+**Question:** When does the cleanup function run?
+
+```tsx
+useEffect(() => {
+  const subscription = subscribe()
+  
+  return () => {
+    subscription.unsubscribe()  // Cleanup
+  }
+}, [])
+```
+
+**Answer:** 
+- On **unmount** (component removed from DOM)
+- **Before** the next effect runs (if deps changed)
+
+**Why cleanup matters:**
+
+```tsx
+// ❌ Memory leak - timer keeps running after unmount
+useEffect(() => {
+  setInterval(() => setCount(c => c + 1), 1000)
+}, [])
+
+// ✅ Proper cleanup
+useEffect(() => {
+  const id = setInterval(() => setCount(c => c + 1), 1000)
+  return () => clearInterval(id)
+}, [])
+```
+
+---
+
+### Keys in Lists
+
+**Question:** Why is using array index as key problematic?
+
+```tsx
+// ❌ Bad: index as key
+{items.map((item, index) => (
+  <Item key={index} data={item} />
+))}
+
+// ✅ Good: unique stable ID
+{items.map(item => (
+  <Item key={item.id} data={item} />
+))}
+```
+
+**Answer:** When items are reordered/removed, React matches by key. Index-based keys cause:
+
+| Problem | What Happens |
+|---------|--------------|
+| **Wrong component reused** | State gets mixed up |
+| **Incorrect animations** | Wrong elements animate |
+| **Input values lost** | Focus jumps, values reset |
+
+**Rule:** Keys should be **stable, unique, and derived from data**, not position.
+
+---
+
+### Rules of Hooks
+
+**Question:** What's wrong with this code?
+
+```tsx
+function Component({ showExtra }) {
+  const [count, setCount] = useState(0)
+  
+  if (showExtra) {
+    const [extra, setExtra] = useState('')  // ❌ ERROR!
+  }
+  
+  return <div>{count}</div>
+}
+```
+
+**Answer:** Hooks called conditionally breaks React!
+
+**Rules of Hooks:**
+
+1. ✅ Only call hooks at the **top level** (not in loops, conditions, nested functions)
+2. ✅ Only call hooks from **React functions** (components or custom hooks)
+
+**Why?** React relies on hook **call order** to track state. Conditional hooks change the order.
+
+**Fix:**
+
+```tsx
+function Component({ showExtra }) {
+  const [count, setCount] = useState(0)
+  const [extra, setExtra] = useState('')  // Always called
+  
+  // Use the value conditionally instead
+  return (
+    <div>
+      {count}
+      {showExtra && <input value={extra} onChange={...} />}
+    </div>
+  )
+}
+```
+
+---
+
+### Async in useEffect
+
+**Question:** Why doesn't this work?
+
+```tsx
+// ❌ Wrong
+useEffect(async () => {
+  const data = await fetchData()
+  setData(data)
+}, [])
+```
+
+**Answer:** `useEffect` expects the callback to return nothing or a cleanup function. `async` functions return a Promise.
+
+**Fix:** Define the async function inside:
+
+```tsx
+// ✅ Correct
+useEffect(() => {
+  async function loadData() {
+    const data = await fetchData()
+    setData(data)
+  }
+  loadData()
+}, [])
+
+// ✅ Or use IIFE
+useEffect(() => {
+  (async () => {
+    const data = await fetchData()
+    setData(data)
+  })()
+}, [])
+```
+
+---
 
 ## JavaScript Gotchas
 
@@ -549,6 +754,193 @@ console.log(a.value) // 5
 ```
 
 **Why?** JavaScript doesn't copy objects — it copies the **reference**. Both `a` and `b` point to the same object in memory.
+
+---
+
+### Array.sort() Default Behavior
+
+**Question:** What does this output?
+
+```ts
+const nums = [10, 5, 40, 25, 100]
+console.log(nums.sort())
+```
+
+**Answer:** `[10, 100, 25, 40, 5]` (not `[5, 10, 25, 40, 100]`!)
+
+**Why?** `sort()` converts elements to **strings** and sorts lexicographically by default.
+
+**Fix:** Always provide a compare function for numbers:
+
+```ts
+nums.sort((a, b) => a - b)  // Ascending: [5, 10, 25, 40, 100]
+nums.sort((a, b) => b - a)  // Descending: [100, 40, 25, 10, 5]
+```
+
+---
+
+### NaN Comparisons
+
+**Question:** What does this output?
+
+```ts
+console.log(NaN === NaN)
+console.log(NaN == NaN)
+```
+
+**Answer:** Both are `false`!
+
+**Why?** `NaN` is the **only** JavaScript value not equal to itself. This is by IEEE 754 floating-point spec.
+
+**How to check for NaN:**
+
+```ts
+// ❌ Don't use
+x === NaN  // Always false
+
+// ✅ Use these
+Number.isNaN(x)     // Recommended (strict)
+isNaN(x)            // Coerces to number first
+Object.is(x, NaN)   // Also works
+```
+
+---
+
+### Floating Point Precision
+
+**Question:** What does this output?
+
+```ts
+console.log(0.1 + 0.2 === 0.3)
+```
+
+**Answer:** `false`!
+
+**Why?** `0.1 + 0.2` equals `0.30000000000000004` due to binary floating-point representation.
+
+**Fix:** Compare with tolerance:
+
+```ts
+const isEqual = Math.abs((0.1 + 0.2) - 0.3) < Number.EPSILON
+```
+
+---
+
+### const with Objects
+
+**Question:** Does this throw an error?
+
+```ts
+const user = { name: "Ian" }
+user.name = "John"
+```
+
+**Answer:** No! It works fine.
+
+**Why?** `const` prevents **reassignment**, not **mutation**. The binding is constant, but the object's properties can change.
+
+```ts
+const user = { name: "Ian" }
+user.name = "John"     // ✅ OK - mutating property
+user = { name: "Bob" } // ❌ TypeError - reassigning const
+```
+
+**To make object immutable:**
+
+```ts
+const user = Object.freeze({ name: "Ian" })
+user.name = "John"  // Silently fails (or throws in strict mode)
+```
+
+---
+
+### Temporal Dead Zone (TDZ)
+
+**Question:** What does this output?
+
+```ts
+console.log(x)
+let x = 5
+```
+
+**Answer:** `ReferenceError: Cannot access 'x' before initialization`
+
+**Why?** `let` and `const` are hoisted but **not initialized**. The time between entering scope and declaration is the **Temporal Dead Zone**.
+
+| Declaration | Hoisted? | Initialized? | TDZ? |
+|-------------|----------|--------------|------|
+| `var` | ✅ | ✅ (as `undefined`) | ❌ |
+| `let` | ✅ | ❌ | ✅ |
+| `const` | ✅ | ❌ | ✅ |
+| `function` | ✅ | ✅ (full function) | ❌ |
+
+---
+
+### parseInt Radix
+
+**Question:** What does this output?
+
+```ts
+console.log(parseInt("08"))
+console.log(parseInt("08", 10))
+```
+
+**Answer:** Both return `8` in modern browsers, but historically `parseInt("08")` could return `0` (octal parsing).
+
+**Best practice:** Always specify the radix:
+
+```ts
+parseInt("08", 10)   // 8 - explicitly base 10
+parseInt("1010", 2)  // 10 - binary
+parseInt("ff", 16)   // 255 - hexadecimal
+```
+
+---
+
+### Hoisting Differences
+
+**Question:** What's the difference?
+
+```ts
+// Function Declaration - fully hoisted
+sayHi()  // ✅ Works!
+function sayHi() { console.log("Hi") }
+
+// Function Expression - only variable hoisted
+sayBye() // ❌ TypeError: sayBye is not a function
+var sayBye = function() { console.log("Bye") }
+```
+
+**Summary:**
+
+| Type | Hoisted | Usable Before Declaration |
+|------|---------|---------------------------|
+| Function Declaration | ✅ Whole function | ✅ Yes |
+| Function Expression (var) | ✅ Variable only (as `undefined`) | ❌ No |
+| Function Expression (let/const) | ✅ Variable only | ❌ No (TDZ) |
+| Arrow Function | Same as expression | ❌ No |
+
+---
+
+### delete Keyword
+
+**Question:** What does this output?
+
+```ts
+const obj = { a: 1 }
+console.log(delete obj.a)
+console.log(obj.a)
+
+let x = 5
+console.log(delete x)
+```
+
+**Answer:** `true`, `undefined`, `false`
+
+**Why?** 
+- `delete` removes object properties and returns `true`
+- `delete` on variables returns `false` (doesn't work)
+- After deletion, accessing the property returns `undefined`
 
 ---
 

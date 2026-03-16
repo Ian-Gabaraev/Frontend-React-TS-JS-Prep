@@ -249,7 +249,7 @@
       margin-bottom: 2rem;
     }
 
-    .category-btn {
+    .category-btn, .size-btn {
       background: var(--card-bg);
       border: 2px solid var(--border);
       color: var(--text);
@@ -260,7 +260,8 @@
       font-size: 0.9rem;
     }
 
-    .category-btn:hover, .category-btn.active {
+    .category-btn:hover, .category-btn.active,
+    .size-btn:hover, .size-btn.active {
       border-color: var(--primary);
       background: rgba(37, 99, 235, 0.15);
     }
@@ -334,6 +335,16 @@
         <button class="category-btn" data-category="react">React (All)</button>
         <button class="category-btn" data-category="react-core">React: State & Props</button>
         <button class="category-btn" data-category="node">Node.js</button>
+      </div>
+
+      <h2 style="margin-top: 1.5rem;">Quiz Size</h2>
+      <p>How many questions?</p>
+      
+      <div class="category-select">
+        <button class="size-btn active" data-size="10">10 Questions</button>
+        <button class="size-btn" data-size="20">20 Questions</button>
+        <button class="size-btn" data-size="30">30 Questions</button>
+        <button class="size-btn" data-size="0">All Available</button>
       </div>
 
       <button class="btn" onclick="startQuiz()">Start Quiz</button>
@@ -483,6 +494,41 @@
           options: ["\"baaa\"", "\"baNaNa\"", "\"ba1a\"", "Error"],
           correct: 1,
           explanation: "+\"a\" tries to convert 'a' to a number, resulting in NaN. So: 'b' + 'a' + NaN + 'a' = 'baNaNa'."
+        },
+        {
+          question: "What does this code output?",
+          code: `const nums = [10, 5, 40, 25, 100]\nconsole.log(nums.sort())`,
+          options: ["[5, 10, 25, 40, 100]", "[10, 100, 25, 40, 5]", "[100, 40, 25, 10, 5]", "Error"],
+          correct: 1,
+          explanation: "sort() converts elements to strings and sorts lexicographically. '10' < '5' because '1' < '5'. Always use sort((a, b) => a - b) for numbers."
+        },
+        {
+          question: "What does this code output?",
+          code: `const user = { name: \"Ian\" }\nuser.name = \"John\"\nconsole.log(user.name)`,
+          options: ["\"Ian\"", "\"John\"", "Error - const is immutable", "undefined"],
+          correct: 1,
+          explanation: "const prevents reassignment, not mutation. You can change object properties. user = {} would throw an error, but user.name = 'John' is fine."
+        },
+        {
+          question: "What does this code output?",
+          code: `console.log(x)\nlet x = 5`,
+          options: ["undefined", "5", "ReferenceError", "null"],
+          correct: 2,
+          explanation: "let and const have a Temporal Dead Zone. They're hoisted but not initialized, so accessing before declaration throws ReferenceError."
+        },
+        {
+          question: "What does this code output?",
+          code: `sayHi()\nvar sayHi = function() {\n  console.log(\"Hi\")\n}`,
+          options: ["\"Hi\"", "undefined", "TypeError", "ReferenceError"],
+          correct: 2,
+          explanation: "Function expressions are hoisted as undefined. Calling undefined() throws TypeError. Function declarations would work (fully hoisted)."
+        },
+        {
+          question: "What does this code output?",
+          code: `const obj = { a: 1 }\nconsole.log(delete obj.a)\nconsole.log(obj.a)`,
+          options: ["true, undefined", "false, 1", "true, 1", "undefined, undefined"],
+          correct: 0,
+          explanation: "delete removes object properties and returns true. After deletion, accessing obj.a returns undefined."
         }
       ],
       'js-concepts': [
@@ -1055,6 +1101,63 @@
           ],
           correct: 1,
           explanation: "React.lazy enables code-splitting. The component is loaded only when rendered. Wrap with Suspense to show fallback while loading. Great for large apps."
+        },
+        {
+          question: "What's the difference between useEffect with [] vs no array?",
+          options: [
+            "No difference",
+            "[] runs once on mount, no array runs every render",
+            "No array runs once, [] runs every render",
+            "Both run on mount only"
+          ],
+          correct: 1,
+          explanation: "useEffect(() => {}, []) runs only on mount. useEffect(() => {}) with no dependency array runs after EVERY render. This is a common mistake!"
+        },
+        {
+          question: "When does the useEffect cleanup function run?",
+          options: [
+            "Only when component mounts",
+            "On unmount and before each effect re-run",
+            "Only on unmount",
+            "It never runs automatically"
+          ],
+          correct: 1,
+          explanation: "Cleanup runs on unmount AND before the next effect runs (if dependencies changed). This prevents memory leaks and stale subscriptions."
+        },
+        {
+          question: "Why can't useEffect be async directly?",
+          code: `useEffect(async () => {\n  await fetchData()\n}, [])`,
+          options: [
+            "It works fine",
+            "async functions return Promises, useEffect expects void or cleanup",
+            "async is not allowed in React",
+            "It would be too slow"
+          ],
+          correct: 1,
+          explanation: "useEffect expects the callback to return nothing or a cleanup function. async returns a Promise. Define an async function inside useEffect instead."
+        },
+        {
+          question: "What causes stale closures in useEffect?",
+          code: `const [count, setCount] = useState(0)\nuseEffect(() => {\n  setInterval(() => console.log(count), 1000)\n}, [])`,
+          options: [
+            "Using setInterval",
+            "Empty dependency array captures initial count value forever",
+            "Nothing is wrong",
+            "useState is broken"
+          ],
+          correct: 1,
+          explanation: "The empty [] means the effect never re-runs, so 'count' inside the callback is always 0 (the initial value). Add [count] to get current value."
+        },
+        {
+          question: "How do you handle async errors in useEffect?",
+          options: [
+            "useEffect catches errors automatically",
+            "Use try/catch inside an async function defined in useEffect",
+            "Use a separate error hook",
+            "Errors cannot occur in useEffect"
+          ],
+          correct: 1,
+          explanation: "Define an async function inside useEffect, wrap logic in try/catch, and call that function. Store errors in state to display to users."
         }
       ],
       'react-core': [
@@ -1351,6 +1454,7 @@
     let currentQuestionIndex = 0;
     let score = 0;
     let selectedCategory = 'all';
+    let selectedSize = 10;
     let answered = false;
 
     // DOM Elements
@@ -1377,6 +1481,15 @@
       });
     });
 
+    // Size Selection
+    document.querySelectorAll('.size-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedSize = parseInt(btn.dataset.size);
+      });
+    });
+
     function shuffleArray(array) {
       const shuffled = [...array];
       for (let i = shuffled.length - 1; i > 0; i--) {
@@ -1394,8 +1507,10 @@
         currentQuestions = shuffleArray(questions[selectedCategory] || []);
       }
 
-      // Limit to 10 questions
-      currentQuestions = currentQuestions.slice(0, 10);
+      // Limit to selected size (0 means all)
+      if (selectedSize > 0) {
+        currentQuestions = currentQuestions.slice(0, selectedSize);
+      }
 
       if (currentQuestions.length === 0) {
         alert('No questions available for this category!');
