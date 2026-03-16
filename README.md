@@ -12,6 +12,9 @@ Test your knowledge with the interactive quiz! Multiple choice questions coverin
 
 - [Quick Reference](#quick-reference)
 - [React Gotchas](#react-gotchas)
+  - [setState Batching & Stale State](#setstate-batching--stale-state)
+  - [Props vs State](#props-vs-state)
+  - [Controlled Components](#controlled-components)
   - [Lifting State Up](#lifting-state-up)
   - [Mutating State Reference](#mutating-state-reference)
 - [JavaScript Gotchas](#javascript-gotchas)
@@ -120,61 +123,95 @@ Test your knowledge with the interactive quiz! Multiple choice questions coverin
 
 ## React Gotchas
 
-### setState twice
+### setState Batching & Stale State
 
-What is wrong with this?
+**Problem:** Multiple `setState` calls using the current state value don't accumulate.
 
 ```ts
 const [items, setItems] = useState([])
 
 function addItem(item) {
-  setItems([...items, item])
-  setItems([...items, item])
+  setItems([...items, item])  // items = []
+  setItems([...items, item])  // items = [] (still!)
 }
+// Result: Only ONE item added, not two!
 ```
 
-Inside this render, items is the same value for the whole function execution.
-React batches state updates, and items inside that render is a snapshot of state.
-React does not immediately update state after the first call.
+**Why?** Inside a single render, `items` is a **snapshot** — it doesn't change mid-function. Both calls use the same stale `[]` value.
 
-the solution would be
+| What Happens | Value of `items` |
+|--------------|------------------|
+| First `setItems` | `[]` → schedules `[item]` |
+| Second `setItems` | `[]` → schedules `[item]` (overwrites!) |
+| After re-render | `[item]` (only one) |
+
+**Solution:** Use **functional updates** to access the latest state:
 
 ```ts
-setItems(prev => [...prev, item])
-setItems(prev => [...prev, item])
+function addItem(item) {
+  setItems(prev => [...prev, item])  // prev = []
+  setItems(prev => [...prev, item])  // prev = [item] ✓
+}
+// Result: TWO items added correctly!
 ```
+
+> **Rule:** When new state depends on previous state, always use `setState(prev => newValue)`.
+
+---
 
 ### Props vs State
 
-`Props` are inputs passed from a parent component to a child component and are `read-only`. 
-`State` is data `managed inside a component` that can change over time. `When state changes, React re-renders the component`.
+| Aspect | Props | State |
+|--------|-------|-------|
+| **Source** | Passed from parent | Managed inside component |
+| **Mutability** | Read-only (immutable) | Can change via `setState` |
+| **On Change** | Parent re-renders child | Component re-renders |
+| **Ownership** | Parent owns | Component owns |
 
-### What is a controlled component?
+```tsx
+// Props: received from parent
+function Greeting({ name }) {        // ← props
+  return <h1>Hello, {name}!</h1>
+}
 
-It is an input component whose values is controlled by React state
+// State: managed internally  
+function Counter() {
+  const [count, setCount] = useState(0)  // ← state
+  return <button onClick={() => setCount(c => c + 1)}>{count}</button>
+}
+```
 
-```ts
+> **Key insight:** Props flow **down**, events flow **up**. State triggers re-renders when it changes.
+
+---
+
+### Controlled Components
+
+A **controlled component** is a form input whose value is controlled by React state.
+
+```tsx
 const [species, setSpecies] = useState("")
 
 <input
-  value={species}
-  onChange={(e) => setSpecies(e.target.value)}
+  value={species}                          // ← value FROM state
+  onChange={(e) => setSpecies(e.target.value)}  // ← updates state
 />
 ```
 
-What happens here
+**Data Flow:**
 
 ```
-user types
-↓
-onChange fires
-↓
-setSpecies updates state
-↓
-React re-renders
-↓
-input value comes from state
+User types → onChange fires → setState updates → React re-renders → input shows new value
 ```
+
+| Type | Source of Truth | Example |
+|------|-----------------|---------|
+| **Controlled** | React state | `<input value={state} onChange={...} />` |
+| **Uncontrolled** | DOM | `<input ref={inputRef} />` |
+
+> **Best practice:** Use controlled components for form validation, conditional disabling, and enforcing input formats.
+
+---
 
 ### Lifting State Up
 
