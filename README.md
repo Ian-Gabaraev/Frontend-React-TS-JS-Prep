@@ -137,6 +137,13 @@ Inside this render, items is the same value for the whole function execution.
 React batches state updates, and items inside that render is a snapshot of state.
 React does not immediately update state after the first call.
 
+the solution would be
+
+```ts
+setItems(prev => [...prev, item])
+setItems(prev => [...prev, item])
+```
+
 ### Props vs State
 
 `Props` are inputs passed from a parent component to a child component and are `read-only`. 
