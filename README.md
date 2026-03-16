@@ -120,6 +120,33 @@ Test your knowledge with the interactive quiz! Multiple choice questions coverin
 
 ## React Gotchas
 
+### What is a controlled component?
+
+It is an input component whose values is controlled by React state
+
+```ts
+const [species, setSpecies] = useState("")
+
+<input
+  value={species}
+  onChange={(e) => setSpecies(e.target.value)}
+/>
+```
+
+What happens here
+
+```
+user types
+↓
+onChange fires
+↓
+setSpecies updates state
+↓
+React re-renders
+↓
+input value comes from state
+```
+
 ### Lifting State Up
 
 **Question:** Why does state live in `App` and not in child components like `BatLogForm` or `ActivityTable`?
