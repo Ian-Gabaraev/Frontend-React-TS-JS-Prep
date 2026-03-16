@@ -12,8 +12,10 @@ Test your knowledge with the interactive quiz! Multiple choice questions coverin
 
 - [Quick Reference](#quick-reference)
 - [React Gotchas](#react-gotchas)
+  - [Lifting State Up](#lifting-state-up)
   - [Mutating State Reference](#mutating-state-reference)
 - [JavaScript Gotchas](#javascript-gotchas)
+  - [[] == ![]](#---)
   - [Arrow Function Block Body](#arrow-function-block-body)
   - [typeof null](#typeof-null)
   - [typeof Array](#typeof-array)
@@ -41,6 +43,12 @@ Test your knowledge with the interactive quiz! Multiple choice questions coverin
   - [Pass by Value vs Reference](#are-objects-passed-by-value-or-reference)
   - [Equality Operators](#equality-operators--vs-)
   - [Nullish Coalescing](#nullish-coalescing)
+- [Common Methods Quick Reference](#common-methods-quick-reference)
+  - [Array Methods](#array-methods)
+  - [String Methods](#string-methods)
+  - [Object Methods](#object-methods)
+  - [Promise Methods](#promise-methods)
+  - [Set & Map](#set--map)
 - [Array Methods](#array-iteration-methods)
 - [TypeScript Essentials](#typescript-essentials)
   - [All TypeScript Types](#all-typescript-types)
@@ -112,7 +120,26 @@ Test your knowledge with the interactive quiz! Multiple choice questions coverin
 
 ## React Gotchas
 
-### Manually updating state
+### Lifting State Up
+
+**Question:** Why does state live in `App` and not in child components like `BatLogForm` or `ActivityTable`?
+
+**Answer:** Both components need access to the same data.
+
+React uses **unidirectional (top-down) data flow**:
+- State lives in the **nearest common ancestor**
+- Data flows down via **props**
+- Events flow up via **callbacks**
+
+```
+BatLogForm ──callback──→ App (state) ──props──→ ActivityTable
+```
+
+This pattern is called **"lifting state up"** — move state to the component that needs to share it with others.
+
+---
+
+### Mutating State Reference
 
 Why will this not make React re-render the component?
 
@@ -869,6 +896,279 @@ console.log(value ?? "default") // "default"
 |----------|------------|
 | `??` | `null` or `undefined` only |
 | `\|\|` | All falsy values (`false`, `0`, `""`, `null`, `undefined`, `NaN`) |
+
+---
+
+## Common Methods Quick Reference
+
+Quick syntax reference for frequently used JavaScript/TypeScript methods.
+
+### Array Methods
+
+#### map - Transform each element
+
+```ts
+const nums = [1, 2, 3]
+const doubled = nums.map(n => n * 2)
+// [2, 4, 6]
+
+// With index
+const indexed = nums.map((n, i) => `${i}: ${n}`)
+// ["0: 1", "1: 2", "2: 3"]
+```
+
+#### filter - Keep matching elements
+
+```ts
+const nums = [1, 2, 3, 4, 5]
+const even = nums.filter(n => n % 2 === 0)
+// [2, 4]
+
+// With type guard
+const strings = mixed.filter((x): x is string => typeof x === 'string')
+```
+
+#### reduce - Accumulate to single value
+
+```ts
+const nums = [1, 2, 3]
+// Sum
+const sum = nums.reduce((acc, n) => acc + n, 0) // 6
+
+// Object from array
+const users = [{id: 1, name: 'Ian'}, {id: 2, name: 'Ana'}]
+const byId = users.reduce((acc, u) => ({ ...acc, [u.id]: u }), {})
+// { 1: {id: 1, name: 'Ian'}, 2: {id: 2, name: 'Ana'} }
+
+// Group by
+const grouped = items.reduce((acc, item) => {
+  const key = item.category
+  acc[key] = [...(acc[key] || []), item]
+  return acc
+}, {})
+```
+
+#### find / findIndex - Get first match
+
+```ts
+const users = [{id: 1, name: 'Ian'}, {id: 2, name: 'Ana'}]
+
+const user = users.find(u => u.id === 2)       // {id: 2, name: 'Ana'}
+const index = users.findIndex(u => u.id === 2) // 1
+```
+
+#### some / every - Test conditions
+
+```ts
+const nums = [1, 2, 3, 4, 5]
+
+nums.some(n => n > 3)  // true (at least one)
+nums.every(n => n > 0) // true (all match)
+```
+
+#### includes - Check existence
+
+```ts
+const nums = [1, 2, 3]
+nums.includes(2)  // true
+nums.includes(99) // false
+```
+
+#### sort - Sort in place (mutates!)
+
+```ts
+const nums = [3, 1, 2]
+
+// Numbers (default sort is alphabetical!)
+nums.sort((a, b) => a - b) // [1, 2, 3] ascending
+nums.sort((a, b) => b - a) // [3, 2, 1] descending
+
+// Strings
+names.sort((a, b) => a.localeCompare(b))
+
+// Objects
+users.sort((a, b) => a.age - b.age)
+```
+
+#### slice - Copy portion (non-mutating)
+
+```ts
+const arr = [1, 2, 3, 4, 5]
+arr.slice(1, 3)  // [2, 3] (from index 1 to 3, exclusive)
+arr.slice(-2)    // [4, 5] (last 2)
+arr.slice()      // [1, 2, 3, 4, 5] (shallow copy)
+```
+
+#### splice - Remove/insert (mutates!)
+
+```ts
+const arr = [1, 2, 3, 4, 5]
+arr.splice(2, 1)        // removes 1 element at index 2 → arr is [1, 2, 4, 5]
+arr.splice(2, 0, 'new') // inserts 'new' at index 2
+arr.splice(1, 2, 'a', 'b') // replaces 2 elements starting at index 1
+```
+
+#### flat / flatMap - Flatten nested arrays
+
+```ts
+const nested = [[1, 2], [3, 4]]
+nested.flat()      // [1, 2, 3, 4]
+
+const nums = [1, 2, 3]
+nums.flatMap(n => [n, n * 2]) // [1, 2, 2, 4, 3, 6]
+```
+
+#### concat / spread - Combine arrays
+
+```ts
+const a = [1, 2]
+const b = [3, 4]
+
+a.concat(b)  // [1, 2, 3, 4]
+[...a, ...b] // [1, 2, 3, 4] (preferred)
+```
+
+---
+
+### String Methods
+
+#### split / join
+
+```ts
+'a,b,c'.split(',')        // ['a', 'b', 'c']
+['a', 'b', 'c'].join('-') // 'a-b-c'
+```
+
+#### substring / slice
+
+```ts
+const str = 'Hello World'
+str.substring(0, 5) // 'Hello'
+str.slice(-5)       // 'World' (negative = from end)
+```
+
+#### includes / startsWith / endsWith
+
+```ts
+const str = 'Hello World'
+str.includes('World')    // true
+str.startsWith('Hello')  // true
+str.endsWith('World')    // true
+```
+
+#### replace / replaceAll
+
+```ts
+'foo bar foo'.replace('foo', 'baz')    // 'baz bar foo' (first only)
+'foo bar foo'.replaceAll('foo', 'baz') // 'baz bar baz' (all)
+'foo bar foo'.replace(/foo/g, 'baz')   // 'baz bar baz' (regex)
+```
+
+#### trim / padStart / padEnd
+
+```ts
+'  hello  '.trim()      // 'hello'
+'5'.padStart(3, '0')    // '005'
+'5'.padEnd(3, '0')      // '500'
+```
+
+#### toUpperCase / toLowerCase
+
+```ts
+'Hello'.toUpperCase() // 'HELLO'
+'Hello'.toLowerCase() // 'hello'
+```
+
+---
+
+### Object Methods
+
+#### Object.keys / values / entries
+
+```ts
+const user = { name: 'Ian', age: 30 }
+
+Object.keys(user)    // ['name', 'age']
+Object.values(user)  // ['Ian', 30]
+Object.entries(user) // [['name', 'Ian'], ['age', 30]]
+```
+
+#### Object.fromEntries
+
+```ts
+const entries = [['name', 'Ian'], ['age', 30]]
+Object.fromEntries(entries) // { name: 'Ian', age: 30 }
+
+// Transform object
+const doubled = Object.fromEntries(
+  Object.entries(prices).map(([k, v]) => [k, v * 2])
+)
+```
+
+#### Object.assign / spread
+
+```ts
+// Merge objects (later wins)
+Object.assign({}, objA, objB)
+{ ...objA, ...objB } // preferred
+
+// Shallow copy
+const copy = { ...original }
+```
+
+#### Destructuring with defaults
+
+```ts
+const { name, age = 25 } = user
+const { name: userName } = user // rename
+const { a, ...rest } = obj      // rest
+```
+
+---
+
+### Promise Methods
+
+```ts
+// Wait for all (fails if any fails)
+const results = await Promise.all([fetch(a), fetch(b), fetch(c)])
+
+// Wait for all (never fails, returns status)
+const results = await Promise.allSettled([p1, p2, p3])
+// [{status: 'fulfilled', value: ...}, {status: 'rejected', reason: ...}]
+
+// First to resolve
+const fastest = await Promise.race([p1, p2, p3])
+
+// First to succeed (ignores rejections)
+const first = await Promise.any([p1, p2, p3])
+```
+
+---
+
+### Set & Map
+
+```ts
+// Set - unique values
+const set = new Set([1, 2, 2, 3]) // {1, 2, 3}
+set.add(4)
+set.has(2)    // true
+set.delete(2)
+[...set]      // convert to array
+
+// Remove duplicates from array
+const unique = [...new Set(arr)]
+
+// Map - key-value pairs (any key type)
+const map = new Map()
+map.set('key', 'value')
+map.set(obj, 'works!')  // objects as keys!
+map.get('key')          // 'value'
+map.has('key')          // true
+map.delete('key')
+
+// Iterate
+for (const [key, value] of map) { }
+```
 
 ---
 
