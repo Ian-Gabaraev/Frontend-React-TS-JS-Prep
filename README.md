@@ -12,6 +12,7 @@ Test your knowledge with the interactive quiz! Multiple choice questions coverin
 
 - [Quick Reference](#quick-reference)
 - [React Gotchas](#react-gotchas)
+  - [Reconciliation & Virtual DOM](#reconciliation--virtual-dom)
   - [setState Batching & Stale State](#setstate-batching--stale-state)
   - [Props vs State](#props-vs-state)
   - [Controlled Components](#controlled-components)
@@ -122,6 +123,36 @@ Test your knowledge with the interactive quiz! Multiple choice questions coverin
 ---
 
 ## React Gotchas
+
+### Reconciliation & Virtual DOM
+
+React uses a **Virtual DOM** — a lightweight in-memory representation of the actual DOM.
+
+**How it works:**
+
+```
+State/Props change
+       ↓
+React creates NEW virtual DOM tree
+       ↓
+Diffing: Compare new vs old virtual DOM
+       ↓
+Calculate minimal set of changes
+       ↓
+Batch update real DOM (reconciliation)
+```
+
+**Why?** Direct DOM manipulation is expensive. React's **diffing algorithm** compares virtual DOM trees and updates only what changed.
+
+| Concept | Description |
+|---------|-------------|
+| **Virtual DOM** | JavaScript object mirroring DOM structure |
+| **Diffing** | Algorithm comparing two virtual DOM trees |
+| **Reconciliation** | Process of updating real DOM with minimal changes |
+
+> **Key insight:** React assumes elements with the same `key` are the same element. That's why stable keys matter for lists!
+
+---
 
 ### setState Batching & Stale State
 
