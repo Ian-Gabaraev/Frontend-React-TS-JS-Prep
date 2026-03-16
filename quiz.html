@@ -434,6 +434,55 @@
           options: ["true", "false", "0.3", "Error"],
           correct: 1,
           explanation: "Floating point arithmetic in JavaScript (and most languages) has precision issues. 0.1 + 0.2 equals 0.30000000000000004, not exactly 0.3."
+        },
+        {
+          question: "What does this code output?",
+          code: `console.log([] == ![])`,
+          options: ["true", "false", "Error", "undefined"],
+          correct: 0,
+          explanation: "![] is false (arrays are truthy, negated = false). [] == false coerces: [] → '' → 0, false → 0. 0 == 0 is true. Wild type coercion!"
+        },
+        {
+          question: "What does this code output?",
+          code: `console.log('5' - 3)`,
+          options: ["'53'", "2", "NaN", "Error"],
+          correct: 1,
+          explanation: "The - operator only works with numbers, so '5' is coerced to 5. 5 - 3 = 2. But + would concatenate: '5' + 3 = '53'."
+        },
+        {
+          question: "What does this code output?",
+          code: `const arr = [1, 2, 3]\narr[10] = 11\nconsole.log(arr.length)`,
+          options: ["4", "11", "10", "Error"],
+          correct: 1,
+          explanation: "Setting arr[10] creates a sparse array with empty slots. The length becomes 11 (indices 0-10). Slots 3-9 are empty (not undefined)."
+        },
+        {
+          question: "What does this code output?",
+          code: `console.log(typeof NaN)`,
+          options: ["\"NaN\"", "\"undefined\"", "\"number\"", "\"object\""],
+          correct: 2,
+          explanation: "NaN (Not a Number) is paradoxically of type 'number'. Use Number.isNaN() to check for NaN, not typeof."
+        },
+        {
+          question: "What does this code output?",
+          code: `console.log(NaN === NaN)`,
+          options: ["true", "false", "NaN", "Error"],
+          correct: 1,
+          explanation: "NaN is the only value in JavaScript that is not equal to itself. Use Number.isNaN(x) instead of x === NaN."
+        },
+        {
+          question: "What does this code output?",
+          code: `let x = 1\nlet y = x++\nconsole.log(x, y)`,
+          options: ["1 1", "2 1", "2 2", "1 2"],
+          correct: 1,
+          explanation: "x++ returns the original value THEN increments. So y gets 1, then x becomes 2. Use ++x for pre-increment."
+        },
+        {
+          question: "What does this code output?",
+          code: `console.log(\"b\" + \"a\" + +\"a\" + \"a\")`,
+          options: ["\"baaa\"", "\"baNaNa\"", "\"ba1a\"", "Error"],
+          correct: 1,
+          explanation: "+\"a\" tries to convert 'a' to a number, resulting in NaN. So: 'b' + 'a' + NaN + 'a' = 'baNaNa'."
         }
       ],
       'js-concepts': [
@@ -489,6 +538,85 @@
           options: ["[\"JS\"]", "[\"JS\", \"React\"]", "undefined", "Error"],
           correct: 1,
           explanation: "Spread creates a shallow copy. Nested arrays/objects are still references. Modifying copy.skills affects user.skills because they point to the same array."
+        },
+        {
+          question: "What does Array.prototype.reduce() do?",
+          options: [
+            "Removes elements from an array",
+            "Reduces array to a single value via accumulator",
+            "Makes the array smaller",
+            "Sorts the array"
+          ],
+          correct: 1,
+          explanation: "reduce() iterates through array elements, accumulating a single result. Takes (accumulator, currentValue) => newAccumulator and an initial value."
+        },
+        {
+          question: "What does this code output?",
+          code: `[1, 2, 3].reduce((acc, n) => acc + n, 0)`,
+          options: ["[1, 2, 3]", "6", "0", "123"],
+          correct: 1,
+          explanation: "reduce starts with 0 (initial value), then: 0+1=1, 1+2=3, 3+3=6. It accumulates all values into a single sum."
+        },
+        {
+          question: "What does this code output?",
+          code: `const arr = [1, 2, 3]\narr.forEach(n => n * 2)\nconsole.log(arr)`,
+          options: ["[2, 4, 6]", "[1, 2, 3]", "undefined", "[]"],
+          correct: 1,
+          explanation: "forEach doesn't modify the original array or return anything. It just executes a function for each element. Use map() to create a new transformed array."
+        },
+        {
+          question: "What is the difference between map() and forEach()?",
+          options: [
+            "No difference",
+            "map returns a new array, forEach returns undefined",
+            "forEach is faster",
+            "map only works with numbers"
+          ],
+          correct: 1,
+          explanation: "map() returns a new array with transformed elements. forEach() returns undefined and is used for side effects only. Use map when you need the result."
+        },
+        {
+          question: "What does Promise.all() do?",
+          options: [
+            "Runs promises one by one",
+            "Waits for all promises, fails if any fails",
+            "Returns the first promise to resolve",
+            "Ignores rejected promises"
+          ],
+          correct: 1,
+          explanation: "Promise.all() waits for all promises to resolve and returns an array of results. If ANY promise rejects, the whole Promise.all() rejects immediately."
+        },
+        {
+          question: "What does this code output?",
+          code: `Promise.resolve(1)\n  .then(x => x + 1)\n  .then(x => x * 2)\n  .then(console.log)`,
+          options: ["1", "2", "4", "undefined"],
+          correct: 2,
+          explanation: "Promise chain: 1 → 1+1=2 → 2*2=4 → console.log(4). Each .then() transforms the value and passes it to the next."
+        },
+        {
+          question: "What does Object.keys() return?",
+          code: `Object.keys({ a: 1, b: 2, c: 3 })`,
+          options: ["[1, 2, 3]", "[\"a\", \"b\", \"c\"]", "{ a: 1, b: 2, c: 3 }", "3"],
+          correct: 1,
+          explanation: "Object.keys() returns an array of the object's own enumerable property names (keys), not values. Use Object.values() for values."
+        },
+        {
+          question: "What is event delegation?",
+          options: [
+            "Passing events between components",
+            "Attaching one handler to a parent instead of many to children",
+            "Creating custom events",
+            "Stopping event propagation"
+          ],
+          correct: 1,
+          explanation: "Event delegation attaches a single event listener to a parent element to handle events from its children. Uses event bubbling. More efficient for many elements."
+        },
+        {
+          question: "What does this code output?",
+          code: `const fn = () => arguments\nfn(1, 2, 3)`,
+          options: ["[1, 2, 3]", "Arguments object", "Error", "undefined"],
+          correct: 2,
+          explanation: "Arrow functions don't have their own 'arguments' object. They inherit from enclosing scope. Use rest parameters (...args) instead."
         }
       ],
       'typescript': [
@@ -559,6 +687,76 @@
           ],
           correct: 1,
           explanation: "Type guards are functions that narrow types at runtime. They use type predicates (value is Type) to help TypeScript understand the type after the check."
+        },
+        {
+          question: "What does Required<T> do?",
+          options: [
+            "Makes all properties optional",
+            "Makes all properties required",
+            "Removes null from types",
+            "Adds validation"
+          ],
+          correct: 1,
+          explanation: "Required<T> is the opposite of Partial<T>. It makes all properties required, removing optional modifiers (?)."
+        },
+        {
+          question: "What does Pick<User, 'name' | 'email'> do?",
+          options: [
+            "Removes name and email from User",
+            "Creates a type with only name and email from User",
+            "Makes name and email optional",
+            "Validates name and email"
+          ],
+          correct: 1,
+          explanation: "Pick<Type, Keys> creates a new type by selecting only the specified properties. It's the opposite of Omit."
+        },
+        {
+          question: "What type does this infer?",
+          code: `const name = \"Ian\"  // type is:`,
+          options: ["string", "\"Ian\"", "any", "unknown"],
+          correct: 1,
+          explanation: "With const, TypeScript infers the literal type \"Ian\", not string. This is because const values can't change, so TypeScript uses the narrowest type."
+        },
+        {
+          question: "What does Record<string, number> create?",
+          options: [
+            "An array of strings and numbers",
+            "An object with string keys and number values",
+            "A class",
+            "A tuple"
+          ],
+          correct: 1,
+          explanation: "Record<K, V> creates an object type with keys of type K and values of type V. Record<string, number> is { [key: string]: number }."
+        },
+        {
+          question: "What does the 'unknown' type do?",
+          options: [
+            "Same as 'any'",
+            "Allows any type but requires type checking before use",
+            "Represents undefined",
+            "Marks unused variables"
+          ],
+          correct: 1,
+          explanation: "unknown is the type-safe counterpart of any. You can assign anything to it, but must narrow/check its type before using it."
+        },
+        {
+          question: "What does the '!' operator do in TypeScript?",
+          code: `const el = document.getElementById(\"app\")!`,
+          options: [
+            "Negates the value",
+            "Asserts the value is not null/undefined",
+            "Makes the value optional",
+            "Creates a boolean"
+          ],
+          correct: 1,
+          explanation: "The non-null assertion operator (!) tells TypeScript you're certain the value isn't null/undefined. Use carefully — it bypasses type safety."
+        },
+        {
+          question: "What does keyof do?",
+          code: `type UserKeys = keyof { name: string, age: number }`,
+          options: ["\"name, age\"", "string", "\"name\" | \"age\"", "string[]"],
+          correct: 2,
+          explanation: "keyof creates a union type of all property names. keyof { name: string, age: number } gives \"name\" | \"age\"."
         }
       ],
       'react': [
@@ -767,6 +965,96 @@
           ],
           correct: 1,
           explanation: "Never mutate state directly! Create a new object with spread: setUser({ ...user, name: 'New' }). React needs a new reference to detect changes and re-render."
+        },
+        {
+          question: "What does useMemo do?",
+          options: [
+            "Memoizes a component",
+            "Memoizes a computed value to avoid recalculation",
+            "Stores data in memory forever",
+            "Creates a ref"
+          ],
+          correct: 1,
+          explanation: "useMemo caches a computed value and only recalculates when dependencies change. Use for expensive calculations to avoid recomputing on every render."
+        },
+        {
+          question: "What does useCallback do?",
+          options: [
+            "Creates a callback function",
+            "Memoizes a function to keep stable reference",
+            "Delays function execution",
+            "Calls a function automatically"
+          ],
+          correct: 1,
+          explanation: "useCallback returns a memoized function that only changes when dependencies change. Useful for passing stable callbacks to memoized children."
+        },
+        {
+          question: "When would you use useLayoutEffect instead of useEffect?",
+          options: [
+            "For async operations",
+            "When you need to read/modify DOM before browser paints",
+            "For simpler code",
+            "Never, they're the same"
+          ],
+          correct: 1,
+          explanation: "useLayoutEffect runs synchronously after DOM mutations but before paint. Use for DOM measurements or changes that must happen before the user sees the update."
+        },
+        {
+          question: "What is the purpose of React Fragments?",
+          code: `<>\n  <Child1 />\n  <Child2 />\n</>`,
+          options: [
+            "Adds extra DOM elements",
+            "Groups elements without adding extra DOM nodes",
+            "Makes components faster",
+            "Enables lazy loading"
+          ],
+          correct: 1,
+          explanation: "Fragments (<>...</> or <Fragment>) let you group children without adding extra DOM nodes. Useful when a component needs to return multiple elements."
+        },
+        {
+          question: "What's wrong with this code?",
+          code: `function Counter() {\n  const [count, setCount] = useState(0)\n  if (count > 5) {\n    const [extra] = useState('hi')\n  }\n  return <div>{count}</div>\n}`,
+          options: [
+            "Nothing wrong",
+            "Hooks called conditionally (breaks rules of hooks)",
+            "Missing key prop",
+            "Wrong syntax"
+          ],
+          correct: 1,
+          explanation: "Hooks must be called at the top level, in the same order every render. Conditional hooks break this rule and cause bugs. Move hooks outside conditions."
+        },
+        {
+          question: "What does useContext do?",
+          options: [
+            "Creates a new context",
+            "Reads a value from a context without prop drilling",
+            "Updates context automatically",
+            "Replaces Redux"
+          ],
+          correct: 1,
+          explanation: "useContext reads current value from a Context. Avoids prop drilling - any component can access the context value without passing props through intermediate components."
+        },
+        {
+          question: "What's the difference between controlled and uncontrolled components?",
+          options: [
+            "No difference",
+            "Controlled uses React state, uncontrolled uses DOM refs",
+            "Uncontrolled is faster",
+            "Controlled requires Redux"
+          ],
+          correct: 1,
+          explanation: "Controlled: React state is the source of truth (value + onChange). Uncontrolled: DOM manages state, you read values with refs. Prefer controlled for most cases."
+        },
+        {
+          question: "What does React.lazy do?",
+          options: [
+            "Makes components render slower",
+            "Enables code-splitting by loading components lazily",
+            "Delays state updates",
+            "Creates lazy animations"
+          ],
+          correct: 1,
+          explanation: "React.lazy enables code-splitting. The component is loaded only when rendered. Wrap with Suspense to show fallback while loading. Great for large apps."
         }
       ],
       'react-core': [
@@ -999,6 +1287,61 @@
           ],
           correct: 1,
           explanation: "CommonJS uses require()/module.exports (synchronous, Node default). ES Modules use import/export (async, tree-shakeable, modern standard)."
+        },
+        {
+          question: "What does ~ mean in \"~4.18.0\"?",
+          options: [
+            "Same as ^",
+            "Patch updates only (4.18.x)",
+            "Major updates only",
+            "Latest version"
+          ],
+          correct: 1,
+          explanation: "The tilde (~) is more restrictive than caret. ~4.18.0 matches 4.18.x only (patch updates). ^4.18.0 allows 4.x.x (minor + patch)."
+        },
+        {
+          question: "What is npm ci used for?",
+          options: [
+            "Same as npm install",
+            "Clean install for CI/CD - uses lockfile exactly",
+            "Checking for vulnerabilities",
+            "Creating package.json"
+          ],
+          correct: 1,
+          explanation: "npm ci does a clean install using package-lock.json exactly. It's faster and more reliable for CI/CD - deletes node_modules first and doesn't modify lockfile."
+        },
+        {
+          question: "What does npm audit do?",
+          options: [
+            "Audits your code quality",
+            "Checks for security vulnerabilities in dependencies",
+            "Monitors package usage",
+            "Logs package downloads"
+          ],
+          correct: 1,
+          explanation: "npm audit scans your dependencies for known security vulnerabilities. Use 'npm audit fix' to automatically install patched versions where available."
+        },
+        {
+          question: "What is tree-shaking?",
+          options: [
+            "A testing technique",
+            "Removing unused code during bundling",
+            "Organizing folder structure",
+            "A type of caching"
+          ],
+          correct: 1,
+          explanation: "Tree-shaking is dead code elimination - bundlers (Webpack, Rollup) remove unused exports. ES Modules enable this with static import/export analysis."
+        },
+        {
+          question: "What is the event loop?",
+          options: [
+            "A loop that handles events in browsers only",
+            "A mechanism that handles async operations in Node/JS",
+            "A type of for loop",
+            "React's rendering cycle"
+          ],
+          correct: 1,
+          explanation: "The event loop continuously checks call stack and callback queues. When the call stack is empty, it moves callbacks from the queue to execute. Enables async JS."
         }
       ]
     };
