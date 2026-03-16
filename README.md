@@ -120,6 +120,28 @@ Test your knowledge with the interactive quiz! Multiple choice questions coverin
 
 ## React Gotchas
 
+### setState twice
+
+What is wrong with this?
+
+```ts
+const [items, setItems] = useState([])
+
+function addItem(item) {
+  setItems([...items, item])
+  setItems([...items, item])
+}
+```
+
+Inside this render, items is the same value for the whole function execution.
+React batches state updates, and items inside that render is a snapshot of state.
+React does not immediately update state after the first call.
+
+### Props vs State
+
+`Props` are inputs passed from a parent component to a child component and are `read-only`. 
+`State` is data `managed inside a component` that can change over time. `When state changes, React re-renders the component`.
+
 ### What is a controlled component?
 
 It is an input component whose values is controlled by React state
